@@ -1,0 +1,518 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Classement - Marchés Publics{% endblock %}
+{% block current_page %}Classement{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{% url 'home' %}">Accueil</a>
+    <span class="separator">›</span>
+    <a href="{% url 'liste_ao' %}">Appels d'offres</a>
+    <span class="separator">›</span>
+    <span class="current">Classement</span>
+{% endblock %}
+
+{% block content %}
+<div class="classement-page">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card">
+        <div class="table-header">
+            <h3>Classement des soumissionnaires</h3>
+            <span class="text-muted">{{ appel_offre.reference }} • {{ appel_offre.titre }}</span>
+        </div>
+
+        <table class="table-classement">
+            <thead>
+                <tr>
+                    <th style="width:8%;">Rang</th>
+                    <th style="width:25%;">Soumissionnaire</th>
+                    <th style="width:18%;">Prix corrigé (FCFA)</th>
+                    <th style="width:18%;">Statut</th>
+                    <th style="width:20%;">Motif</th>
+                    <th style="width:11%;">Détails</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in classement %}
+                    <tr class="
+                        {% if forloop.first and s.statut_final == 'retenu' %}row-attributaire
+                        {% elif s.statut_final == 'ecarte' %}row-ecarte{% endif %}
+                    ">
+                        <td>
+                            <span class="rank-circle 
+                                {% if forloop.first %}rank-1
+                                {% elif s.statut_final == 'ecarte' %}rank-gray{% endif %}">
+                                {{ s.rang|default:"-" }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if forloop.first and s.statut_final == 'retenu' %}
+                                <strong>{{ s.nom_entreprise }}</strong>
+                            {% else %}
+                                {{ s.nom_entreprise }}
+                            {% endif %}
+                        </td>
+                        <td class="
+                            {% if forloop.first and s.statut_final == 'retenu' %}montant-green
+                            {% elif s.statut_final == 'ecarte' %}montant-gray{% endif %}">
+                            {{ s.prix_corrige|default:"—" }}
+                        </td>
+                        <td>
+                            {% if s.statut_final == 'retenu' %}
+                                <span class="badge badge-green">✓ Attributaire proposé</span>
+                            {% elif s.statut_final == 'ecarte' %}
+                                <span class="badge badge-red">✗ Écarté</span>
+                            {% elif s.statut_conformite == 'conforme_technique' %}
+                                <span class="badge badge-blue">Conforme</span>
+                            {% else %}
+                                <span class="badge badge-yellow">En cours</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if s.motif_rejet %}
+                                <span class="motif-red">{{ s.motif_rejet }}</span>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-info"
+                                    data-id="{{ s.id }}"
+                                    onclick="voirDetails(this.getAttribute('data-id'))"
+                                    title="Voir les détails du soumissionnaire">
+                                <i class="ti ti-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            Aucun soumissionnaire classé pour cet appel d'offres.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="table-footer">
+            <span>{{ classement|length }} soumissionnaires</span>
+            <div class="form-actions">
+                <a href="{% url 'generer_pv' appel_offre.id %}" class="btn btn-primary">
+                    <i class="ti ti-file-text"></i> Générer le PV
+                </a>
+                <a href="{% url 'detail_ao' appel_offre.id %}" class="btn btn-secondary-custom">
+                    <i class="ti ti-arrow-left"></i> Retour
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DÉTAILS -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalTitle">Détails du soumissionnaire</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer la fenêtre"></button>
+            </div>
+            <div class="modal-body" id="detailsBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Chargement des détails...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .classement-page {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .table-header h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .text-muted {
+        color: #999;
+        font-size: 12px;
+    }
+
+    .table-classement {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .table-classement thead th {
+        text-align: left;
+        padding: 8px 6px;
+        font-weight: 600;
+        color: #666;
+        border-bottom: 0.5px solid #e8eaed;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .table-classement tbody td {
+        padding: 10px 6px;
+        border-bottom: 0.5px solid #f0f2f4;
+        vertical-align: middle;
+    }
+
+    .table-classement tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    .row-attributaire {
+        background: #f5faf5;
+    }
+
+    .row-ecarte {
+        background: #fdf6f6;
+    }
+
+    .rank-circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #495057;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .rank-1 {
+        background: var(--tg-green, #43a842);
+        color: white;
+    }
+
+    .rank-gray {
+        background: #adb5bd;
+        color: white;
+    }
+
+    .montant-green {
+        color: var(--tg-green, #43a842);
+        font-weight: 600;
+    }
+
+    .montant-gray {
+        color: #aaa;
+    }
+
+    .motif-red {
+        color: var(--tg-red, #D11135);
+        font-size: 11px;
+    }
+
+    .badge {
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .badge-green {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+
+    .badge-red {
+        background: #f8d7da;
+        color: #58151c;
+    }
+
+    .badge-blue {
+        background: #cfe2ff;
+        color: #052c65;
+    }
+
+    .badge-yellow {
+        background: #fff3cd;
+        color: #664d03;
+    }
+
+    .btn-sm {
+        padding: 3px 8px;
+        border-radius: 4px;
+        border: none;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+
+    .btn-info:hover {
+        background: #138496;
+    }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 12px;
+        margin-top: 4px;
+        border-top: 0.5px solid #e8eaed;
+        font-size: 12px;
+        color: #666;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .btn {
+        padding: 6px 16px;
+        border-radius: 5px;
+        border: none;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+        background: var(--tg-green, #43a842);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #3a9638;
+    }
+
+    .btn-secondary-custom {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .btn-secondary-custom:hover {
+        background: #dee2e6;
+    }
+
+    .alert {
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .alert-success {
+        background: #d1e7dd;
+        color: #0a3622;
+        border-left: 4px solid var(--tg-green, #43a842);
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        color: #58151c;
+        border-left: 4px solid var(--tg-red, #D11135);
+    }
+
+    /* Modal Détails */
+    .modal-content {
+        border-radius: 12px;
+    }
+
+    .modal-header {
+        background: linear-gradient(to right, #116E9B, #026B58);
+        color: white;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .detail-category {
+        margin-bottom: 16px;
+    }
+
+    .detail-category h6 {
+        font-weight: 600;
+        color: #116E9B;
+        border-bottom: 2px solid #43a842;
+        padding-bottom: 4px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        border-bottom: 0.5px solid #f0f2f4;
+        font-size: 12px;
+    }
+
+    .detail-item .label {
+        color: #666;
+    }
+
+    .detail-item .value {
+        font-weight: 500;
+    }
+
+    .detail-item .value.present {
+        color: #43a842;
+    }
+
+    .detail-item .value.absent {
+        color: #D11135;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .py-4 {
+        padding-top: 24px;
+        padding-bottom: 24px;
+    }
+</style>
+
+<script>
+    function voirDetails(id) {
+        const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+        const body = document.getElementById('detailsBody');
+        const title = document.getElementById('detailsModalTitle');
+
+        body.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p class="mt-2 text-muted">Chargement des détails...</p>
+            </div>
+        `;
+
+        modal.show();
+
+        fetch(`/soumissionnaires/api/soumissionnaire/${id}/details/`)
+            .then(response => {
+                if (!response.ok) throw new Error('Erreur de chargement');
+                return response.json();
+            })
+            .then(data => {
+                title.textContent = `Détails - ${data.nom_entreprise}`;
+                let html = '';
+
+                // Informations générales
+                html += `
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Entreprise :</strong> ${data.nom_entreprise}</p>
+                            <p><strong>Prix corrigé :</strong> ${data.prix_corrige || 'Non défini'} FCFA</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Statut :</strong> <span class="badge ${data.statut_final === 'retenu' ? 'badge-green' : 'badge-yellow'}">${data.statut_final}</span></p>
+                            ${data.motif_rejet ? `<p><strong>Motif :</strong> <span style="color:var(--tg-red);">${data.motif_rejet}</span></p>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Critères par catégorie
+                const categories = {
+                    'administratif': { label: '📂 Administratif', icon: 'ti ti-file-text' },
+                    'technique': { label: '🔧 Technique', icon: 'ti ti-settings' },
+                    'financier': { label: '💰 Financier', icon: 'ti ti-currency-franc' }
+                };
+
+                for (const [cat, info] of Object.entries(categories)) {
+                    const items = data.criteres.filter(c => c.categorie === cat);
+                    if (items.length === 0) continue;
+
+                    html += `
+                        <div class="detail-category">
+                            <h6><i class="${info.icon}"></i> ${info.label}</h6>
+                    `;
+
+                    for (const item of items) {
+                        const isPresent = item.valeur_extraite && item.valeur_extraite.trim() !== '';
+                        const statusClass = isPresent ? 'present' : 'absent';
+                        const statusText = isPresent ? '✅ Présent' : '❌ Non fourni';
+
+                        html += `
+                            <div class="detail-item">
+                                <span class="label">${item.libelle}</span>
+                                <span class="value ${statusClass}">${statusText}</span>
+                            </div>
+                        `;
+                    }
+
+                    html += `</div>`;
+                }
+
+                // Justifications IA
+                if (data.justifications && data.justifications.length > 0) {
+                    html += `
+                        <div class="detail-category">
+                            <h6><i class="ti ti-robot"></i> Justifications de l'IA</h6>
+                    `;
+                    for (const j of data.justifications) {
+                        html += `
+                            <div class="detail-item">
+                                <span class="label">${j.critere}</span>
+                                <span class="value" style="font-size:11px;color:#666;">${j.justification}</span>
+                            </div>
+                        `;
+                    }
+                    html += `</div>`;
+                }
+
+                body.innerHTML = html;
+            })
+            .catch(error => {
+                body.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="ti ti-alert-circle"></i> ${error.message}
+                    </div>
+                `;
+            });
+    }
+</script>
+{% endblock %}

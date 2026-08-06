@@ -1,0 +1,18 @@
+# config/urls.py
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('appels_offres.urls')),
+    path('utilisateurs/', include('utilisateurs.urls')),
+    path('soumissionnaires/', include('soumissionnaires.urls')),
+    path('proces-verbaux/', include('proces_verbaux.urls')),
+    path('proces-verbaux/', include('proces_verbaux.urls')),  
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

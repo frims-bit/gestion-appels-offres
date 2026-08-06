@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload cahier des charges - Marchés Publics{% endblock %}
+{% block current_page %}Upload cahier des charges{% endblock %}
+
+{% block content %}
+<div class="upload-page">
+    <div class="card upload-card">
+        <div class="upload-header">
+            <i class="ti ti-upload"></i>
+            <h2>Upload cahier des charges</h2>
+            <p>Téléchargez le cahier des charges pour générer automatiquement la grille d'évaluation</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="reference">Référence de l'appel d'offres</label>
+                <input type="text" name="reference" id="reference" placeholder="Ex: 2026-001/AO/MESP" required>
+            </div>
+
+            <div class="form-group">
+                <label for="titre">Titre</label>
+                <input type="text" name="titre" id="titre" placeholder="Ex: Acquisition de matériel informatique" required>
+            </div>
+
+            <div class="form-group">
+                <label for="date_publication">Date de publication</label>
+                <input type="date" name="date_publication" id="date_publication" required>
+            </div>
+
+            <div class="form-group">
+                <label for="fichier">Fichier PDF</label>
+                <div class="drop-zone" id="drop-zone">
+                    <div class="drop-zone-content">
+                        <i class="ti ti-cloud-upload"></i>
+                        <p>Glissez-déposez votre fichier ici</p>
+                        <span>ou cliquez pour parcourir</span>
+                        <input type="file" name="fichier" id="fichier" accept=".pdf,.docx" required>
+                    </div>
+                </div>
+                <div id="file-info" class="file-info" style="display:none;">
+                    <i class="ti ti-file"></i>
+                    <span id="file-name"></span>
+                    <span id="file-size" class="text-muted"></span>
+                </div>
+                <small>Formats acceptés : PDF, DOCX (jusqu'à 50 Mo)</small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-rocket"></i> Lancer l'extraction
+                </button>
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card info-card">
+        <h4><i class="ti ti-info-circle"></i> Information</h4>
+        <p>Après l'upload, l'IA va analyser le document et générer automatiquement la grille d'évaluation.</p>
+        <p>Vous serez notifié quand la grille sera prête à être validée par l'évaluateur.</p>
+    </div>
+</div>
+
+<style>
+    .upload-page {
+        max-width: 640px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .upload-card {
+        padding: 24px;
+    }
+
+    .upload-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .upload-header i {
+        font-size: 32px;
+        color: var(--tg-blue, #116E9B);
+    }
+
+    .upload-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 6px 0 2px;
+    }
+
+    .upload-header p {
+        font-size: 13px;
+        color: #666;
+        margin: 0;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        margin-bottom: 4px;
+        color: #333;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 0.5px solid #d0d3d8;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--tg-blue, #116E9B);
+    }
+
+    .drop-zone {
+        border: 2px dashed #d0d3d8;
+        border-radius: 8px;
+        padding: 30px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fafbfc;
+    }
+
+    .drop-zone:hover {
+        border-color: var(--tg-blue, #116E9B);
+        background: #f0f6fb;
+    }
+
+    .drop-zone-content i {
+        font-size: 36px;
+        color: var(--tg-mid-gray, #817F7F);
+    }
+
+    .drop-zone-content p {
+        margin: 6px 0 0;
+        font-weight: 500;
+        font-size: 13px;
+    }
+
+    .drop-zone-content span {
+        font-size: 12px;
+        color: #999;
+    }
+
+    .drop-zone-content input {
+        display: none;
+    }
+
+    .file-info {
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: #f0f6fb;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+    }
+
+    .file-info i {
+        color: var(--tg-red, #D11135);
+        font-size: 18px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 4px;
+    }
+
+    .btn {
+        padding: 8px 20px;
+        border-radius: 5px;
+        border: none;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+        background: var(--tg-green, #43a842);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #3a9638;
+    }
+
+    .btn-outline-secondary {
+        background: transparent;
+        color: #666;
+        border: 0.5px solid #d0d3d8;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f0f2f4;
+    }
+
+    .info-card {
+        padding: 16px 20px;
+    }
+
+    .info-card h4 {
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 0 6px;
+        color: var(--tg-blue, #116E9B);
+    }
+
+    .info-card p {
+        font-size: 12px;
+        color: #666;
+        margin: 4px 0;
+    }
+
+    .info-card p:last-child {
+        margin-bottom: 0;
+    }
+
+    .text-muted {
+        color: #999;
+        font-size: 12px;
+    }
+
+    @media (max-width: 480px) {
+        .upload-card {
+            padding: 16px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('fichier');
+    const fileInfo = document.getElementById('file-info');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#43a842';
+        dropZone.style.background = '#f5faf5';
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '#d0d3d8';
+        dropZone.style.background = '#fafbfc';
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#d0d3d8';
+        dropZone.style.background = '#fafbfc';
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            updateFileInfo(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) {
+            updateFileInfo(fileInput.files[0]);
+        }
+    });
+
+    function updateFileInfo(file) {
+        document.querySelector('.drop-zone-content').style.display = 'none';
+        fileInfo.style.display = 'flex';
+        fileName.textContent = file.name;
+        fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(2)} Mo)`;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,718 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Validation de la grille - Marchés Publics{% endblock %}
+{% block current_page %}Validation de la grille{% endblock %}
+
+{% block extra_css %}
+<style>
+    .validation-page {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .alert-ia {
+        background: #e8f4fd;
+        border-left: 3px solid var(--tg-blue, #0d6efd);
+        border-radius: 6px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #0c447c;
+        font-size: 13px;
+    }
+
+    .alert-ia i {
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+    .alert-ia strong {
+        display: block;
+        font-weight: 600;
+    }
+
+    .alert-ia span {
+        font-size: 12px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 8px;
+        border: 0.5px solid #e0e2e6;
+        padding: 16px 20px;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .table-header h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .table-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .total-points {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .total-points strong {
+        color: var(--tg-text, #212529);
+        font-size: 14px;
+    }
+
+    .groupe-criteres {
+        border: 0.5px solid #e0e2e6;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+
+    .groupe-header {
+        background: #f8f9fa;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 0.5px solid #e0e2e6;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .groupe-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .groupe-info h4 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .groupe-note {
+        font-size: 12px;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .groupe-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    .groupe-actions .form-check-input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: var(--tg-green, #198754);
+    }
+
+    .groupe-actions label {
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .table-sous-criteres {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .table-sous-criteres thead th {
+        text-align: left;
+        padding: 8px 12px;
+        font-weight: 600;
+        color: #666;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border-bottom: 0.5px solid #e8eaed;
+        background: #fafbfc;
+    }
+
+    .table-sous-criteres tbody td {
+        padding: 8px 12px;
+        border-bottom: 0.5px solid #f0f2f4;
+        vertical-align: middle;
+    }
+
+    .table-sous-criteres tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    .badge-cat {
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .badge-fin {
+        background: #cfe2ff;
+        color: #052c65;
+    }
+
+    .badge-tech {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+
+    .badge-admin {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .badge {
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .badge-red {
+        background: #f8d7da;
+        color: #58151c;
+    }
+
+    .badge-blue {
+        background: #cfe2ff;
+        color: #052c65;
+    }
+
+    .input-note {
+        width: 60px;
+        padding: 4px 6px;
+        border: 0.5px solid #d0d3d8;
+        border-radius: 4px;
+        font-size: 12px;
+        font-family: 'Inter', sans-serif;
+        text-align: center;
+    }
+
+    .input-note:focus {
+        outline: none;
+        border-color: var(--tg-blue, #0d6efd);
+    }
+
+    .form-check-input {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: var(--tg-green, #198754);
+    }
+
+    .btn-sm {
+        padding: 3px 8px;
+        border-radius: 4px;
+        border: none;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-outline-primary {
+        background: transparent;
+        color: var(--tg-blue, #0d6efd);
+        border: 0.5px solid var(--tg-blue, #0d6efd);
+    }
+
+    .btn-outline-primary:hover {
+        background: #f0f6fb;
+    }
+
+    .btn-outline-secondary {
+        background: transparent;
+        color: #666;
+        border: 0.5px solid #d0d3d8;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f0f2f4;
+    }
+
+    .btn-outline-danger {
+        background: transparent;
+        color: var(--tg-red, #dc3545);
+        border: 0.5px solid var(--tg-red, #dc3545);
+    }
+
+    .btn-outline-danger:hover {
+        background: #fdf6f6;
+    }
+
+    .btn {
+        padding: 8px 24px;
+        border-radius: 5px;
+        border: none;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+        background: var(--tg-green, #198754);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #3a9638;
+    }
+
+    .btn-secondary-custom {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .btn-secondary-custom:hover {
+        background: #dee2e6;
+    }
+
+    .table-footer {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        padding-top: 16px;
+        margin-top: 4px;
+        border-top: 0.5px solid #e8eaed;
+        flex-wrap: wrap;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-muted {
+        color: #999;
+        font-size: 12px;
+    }
+
+    .py-4 {
+        padding-top: 24px;
+        padding-bottom: 24px;
+    }
+
+    .modal-content {
+        border-radius: 12px;
+    }
+
+    @media (max-width: 768px) {
+        .groupe-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .table-sous-criteres {
+            font-size: 11px;
+        }
+
+        .table-sous-criteres thead th,
+        .table-sous-criteres tbody td {
+            padding: 6px 8px;
+        }
+
+        .input-note {
+            width: 50px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="validation-page">
+
+    <!-- Alerte IA -->
+    <div class="alert-ia">
+        <i class="ti ti-robot"></i>
+        <div>
+            <strong>Grille générée par l'IA</strong>
+            <span>Vérifiez chaque groupe et ses sous-critères avant de valider.</span>
+        </div>
+    </div>
+
+    <!-- Formulaire de validation -->
+    <form method="post" action="{% url 'validation_grille' appel_offre.id %}" id="form-validation">
+        {% csrf_token %}
+
+        <div class="card">
+            <div class="table-header">
+                <h3><i class="ti ti-list"></i> Critères d'évaluation</h3>
+                <div class="table-actions">
+                    <span class="total-points">
+                        Total : <strong id="total-points">0</strong> pts
+                    </span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#ajouterGroupeModal">
+                        <i class="ti ti-plus"></i> Ajouter un groupe
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="toutValider()">
+                        <i class="ti ti-check-all"></i> Tout valider
+                    </button>
+                </div>
+            </div>
+
+            {% for groupe in groupes %}
+                <div class="groupe-criteres" data-groupe-id="{{ groupe.id }}">
+                    <div class="groupe-header">
+                        <div class="groupe-info">
+                            <h4>
+                                {{ groupe.libelle }}
+                                <span class="badge-cat 
+                                    {% if groupe.categorie == 'technique' %}badge-tech
+                                    {% elif groupe.categorie == 'financier' %}badge-fin
+                                    {% else %}badge-admin{% endif %}">
+                                    {{ groupe.get_categorie_display }}
+                                </span>
+                                {% if groupe.type_groupe == 'eliminatoire' %}
+                                    <span class="badge badge-red">ÉLIMINATOIRE</span>
+                                {% endif %}
+                            </h4>
+                            <span class="groupe-note">Note max : <strong class="groupe-note-total">{{ groupe.note_max }}</strong> pts</span>
+                        </div>
+                        <div class="groupe-actions">
+                            <input type="checkbox" name="critere_{{ groupe.id }}" id="critere_{{ groupe.id }}"
+                                   class="form-check-input groupe-checkbox" 
+                                   data-groupe-id="{{ groupe.id }}"
+                                   {% if groupe.valide %}checked{% endif %}>
+                            <label for="critere_{{ groupe.id }}">Valider le groupe</label>
+                            <button type="button" class="btn btn-sm btn-outline-secondary btn-ajout-sous-critere" 
+                                    data-parent-id="{{ groupe.id }}" data-parent-libelle="{{ groupe.libelle|escapejs }}"
+                                    title="Ajouter un sous-critère" aria-label="Ajouter un sous-critère pour {{ groupe.libelle }}">
+                                <i class="ti ti-plus" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <table class="table-sous-criteres">
+                        <thead>
+                            <tr>
+                                <th style="width:5%;">#</th>
+                                <th style="width:45%;">Sous-critère</th>
+                                <th style="width:15%;">Type</th>
+                                <th style="width:15%;">Note max</th>
+                                <th style="width:10%;">Validé</th>
+                                <th style="width:10%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sous in groupe.sous_criteres.all %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ sous.libelle }}</td>
+                                    <td>
+                                        {% if sous.type_groupe == 'eliminatoire' %}
+                                            <span class="badge badge-red">Éliminatoire</span>
+                                        {% else %}
+                                            <span class="badge badge-blue">Notable</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <label for="note_{{ sous.id }}" class="visually-hidden">Note max pour {{ sous.libelle }}</label>
+                                        <input id="note_{{ sous.id }}" type="number" name="note_{{ sous.id }}" 
+                                               value="{{ sous.note_max }}" min="0" max="100" 
+                                               class="input-note" step="0.5"
+                                               data-groupe-id="{{ groupe.id }}" aria-label="Note max pour {{ sous.libelle }}">
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" name="critere_{{ sous.id }}" 
+                                               id="critere_{{ sous.id }}" class="form-check-input sous-checkbox"
+                                               data-groupe-id="{{ groupe.id }}"
+                                               {% if sous.valide %}checked{% endif %}>
+                                        <label for="critere_{{ sous.id }}" class="visually-hidden">Valider le sous-critère {{ sous.libelle }}</label>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-critere" 
+                                                data-critere-id="{{ sous.id }}" data-critere-libelle="{{ sous.libelle|escapejs }}"
+                                                title="Supprimer le sous-critère {{ sous.libelle }}" aria-label="Supprimer le sous-critère {{ sous.libelle }}">
+                                            <i class="ti ti-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        Aucun sous-critère. Cliquez sur <i class="ti ti-plus"></i> pour en ajouter.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% empty %}
+                <p class="text-center text-muted py-4">Aucun critère généré pour cet appel d'offres.</p>
+            {% endfor %}
+
+            <div class="table-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-check"></i> Valider la grille
+                </button>
+                <a href="{% url 'liste_ao' %}" class="btn btn-secondary-custom">
+                    <i class="ti ti-arrow-left"></i> Retour
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- MODAL : Ajouter un groupe -->
+<div class="modal fade" id="ajouterGroupeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'validation_grille' appel_offre.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="ajouter_manuel">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter un groupe</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="parent_id" value="">
+                    <div class="mb-3">
+                        <label for="groupe_libelle" class="form-label">Libellé</label>
+                        <input type="text" name="libelle" id="groupe_libelle" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="groupe_categorie" class="form-label">Catégorie</label>
+                        <select name="categorie" id="groupe_categorie" class="form-select" required>
+                            <option value="administratif">Administratif</option>
+                            <option value="technique">Technique</option>
+                            <option value="financier">Financier</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="groupe_type" class="form-label">Type</label>
+                        <select name="type_groupe" id="groupe_type" class="form-select" required>
+                            <option value="notable">Notable</option>
+                            <option value="eliminatoire">Éliminatoire</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="groupe_note" class="form-label">Note max</label>
+                        <input type="number" name="note_max" id="groupe_note" class="form-control" step="0.5" value="0" min="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL : Ajouter un sous-critère -->
+<div class="modal fade" id="ajouterSousCritereModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'validation_grille' appel_offre.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="ajouter_manuel">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter un sous-critère</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="parent_id" id="sous_parent_id">
+                    <div class="mb-3">
+                        <label for="sous_groupe_nom" class="form-label">Groupe parent</label>
+                        <input type="text" id="sous_groupe_nom" class="form-control" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sous_libelle" class="form-label">Libellé</label>
+                        <input type="text" name="libelle" id="sous_libelle" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sous_categorie" class="form-label">Catégorie</label>
+                        <select name="categorie" id="sous_categorie" class="form-select" required>
+                            <option value="administratif">Administratif</option>
+                            <option value="technique">Technique</option>
+                            <option value="financier">Financier</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sous_type" class="form-label">Type</label>
+                        <select name="type_groupe" id="sous_type" class="form-select" required>
+                            <option value="notable">Notable</option>
+                            <option value="eliminatoire">Éliminatoire</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sous_note" class="form-label">Note max</label>
+                        <input type="number" name="note_max" id="sous_note" class="form-control" step="0.5" value="0" min="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL : Supprimer un critère -->
+<div class="modal fade" id="supprimerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Voulez-vous vraiment supprimer le critère : <strong id="supprimer-libelle"></strong> ?</p>
+                <p class="text-muted small">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <form method="post" action="{% url 'supprimer_critere' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="supprimer">
+                    <input type="hidden" name="critere_id" id="supprimer-id">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block extra_js %}
+<script>
+    // ===== 1. Met à jour la note du groupe =====
+    function updateGroupeNote(groupeId) {
+        const groupeEl = document.querySelector(`.groupe-criteres[data-groupe-id="${groupeId}"]`);
+        if (!groupeEl) return;
+
+        const notes = groupeEl.querySelectorAll('.input-note');
+        let total = 0;
+        notes.forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+
+        const noteDisplay = groupeEl.querySelector('.groupe-note-total');
+        if (noteDisplay) {
+            noteDisplay.textContent = total.toFixed(1);
+        }
+
+        updateTotalGeneral();
+    }
+
+    // ===== 2. Met à jour le total général =====
+    function updateTotalGeneral() {
+        const allGroupes = document.querySelectorAll('.groupe-criteres');
+        let totalGeneral = 0;
+        allGroupes.forEach(groupe => {
+            const noteEl = groupe.querySelector('.groupe-note-total');
+            if (noteEl) {
+                totalGeneral += parseFloat(noteEl.textContent) || 0;
+            }
+        });
+        const totalDisplay = document.getElementById('total-points');
+        if (totalDisplay) {
+            totalDisplay.textContent = totalGeneral.toFixed(1);
+        }
+    }
+
+    // ===== 3. Validation en cascade : groupe → sous-critères =====
+    document.querySelectorAll('.groupe-checkbox').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const groupeId = this.dataset.groupeId;
+            const groupeEl = this.closest('.groupe-criteres');
+            const sousCheckboxes = groupeEl.querySelectorAll('.sous-checkbox');
+            sousCheckboxes.forEach(sousCb => {
+                sousCb.checked = this.checked;
+            });
+        });
+    });
+
+    // ===== 4. Mise à jour des notes =====
+    document.querySelectorAll('.input-note').forEach(input => {
+        input.addEventListener('change', function() {
+            const groupeId = this.dataset.groupeId;
+            if (groupeId) {
+                updateGroupeNote(groupeId);
+            }
+        });
+    });
+
+    // ===== 5. Ouvre le modal d'ajout de sous-critère =====
+    function ajouterSousCritere(btn) {
+        const parentId = btn.getAttribute('data-parent-id');
+        const parentLibelle = btn.getAttribute('data-parent-libelle');
+        document.getElementById('sous_parent_id').value = parentId;
+        document.getElementById('sous_groupe_nom').value = parentLibelle;
+        const modal = new bootstrap.Modal(document.getElementById('ajouterSousCritereModal'));
+        modal.show();
+    }
+
+    // ===== 6. Ouvre le modal de suppression =====
+    function confirmerSuppression(btn) {
+        const id = btn.getAttribute('data-critere-id');
+        const libelle = btn.getAttribute('data-critere-libelle');
+        document.getElementById('supprimer-id').value = id;
+        document.getElementById('supprimer-libelle').textContent = libelle;
+        const modal = new bootstrap.Modal(document.getElementById('supprimerModal'));
+        modal.show();
+    }
+
+    // ===== 7. Fonction "Tout valider" =====
+    function toutValider() {
+        document.querySelectorAll('.groupe-checkbox').forEach(cb => cb.checked = true);
+        document.querySelectorAll('.sous-checkbox').forEach(cb => cb.checked = true);
+    }
+
+    // ===== 8. Initialisation au chargement =====
+    document.addEventListener('DOMContentLoaded', function() {
+        const allGroupes = document.querySelectorAll('.groupe-criteres');
+        allGroupes.forEach(groupe => {
+            const id = groupe.dataset.groupeId;
+            if (id) {
+                updateGroupeNote(id);
+            }
+        });
+
+        document.querySelectorAll('.btn-ajout-sous-critere').forEach(btn => {
+            btn.addEventListener('click', function() {
+                ajouterSousCritere(this);
+            });
+        });
+
+        document.querySelectorAll('.btn-supprimer-critere').forEach(btn => {
+            btn.addEventListener('click', function() {
+                confirmerSuppression(this);
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

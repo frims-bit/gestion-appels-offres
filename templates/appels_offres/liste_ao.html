@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des appels d'offres - Marchés Publics{% endblock %}
+{% block current_page %}Liste des appels d'offres{% endblock %}
+
+{% block content %}
+<div class="liste-page">
+    <div class="card">
+        <div class="table-header">
+            <h3><i class="ti ti-list"></i> Tous les appels d'offres</h3>
+            <div class="table-actions">
+                <form method="get" class="filter-form">
+                    <select name="statut" aria-label="Filtrer par statut" title="Filtrer par statut" onchange="this.form.submit()">
+                        <option value="tous" {% if statut_actuel == 'tous' or not statut_actuel %}selected{% endif %}>Tous les statuts</option>
+                        <option value="brouillon" {% if statut_actuel == 'brouillon' %}selected{% endif %}>Brouillon</option>
+                        <option value="grille_en_attente" {% if statut_actuel == 'grille_en_attente' %}selected{% endif %}>Grille en attente</option>
+                        <option value="en_cours" {% if statut_actuel == 'en_cours' %}selected{% endif %}>En cours</option>
+                        <option value="juge" {% if statut_actuel == 'juge' %}selected{% endif %}>Jugé</option>
+                        <option value="cloture" {% if statut_actuel == 'cloture' %}selected{% endif %}>Clôturé</option>
+                    </select>
+                </form>
+                <button class="btn-filter" onclick="document.querySelector('.filter-form').submit()">
+                    <i class="ti ti-filter"></i> Filtrer
+                </button>
+            </div>
+        </div>
+
+        <table class="table-ao">
+            <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Titre</th>
+                    <th>Date de publication</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ao in appels_offres %}
+                    <tr>
+                        <td><span class="ref-link">{{ ao.reference }}</span></td>
+                        <td>{{ ao.titre|truncatechars:60 }}</td>
+                        <td>{{ ao.date_publication }}</td>
+                        <td>
+                            <span class="badge {{ ao.statut }}">
+                                {{ ao.get_statut_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'detail_ao' ao.id %}" class="btn-sm btn-blue">Voir</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">Aucun appel d'offres</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="table-footer">
+            <span>{{ appels_offres.paginator.count }} appels d'offres</span>
+            <div class="pagination">
+                {% if appels_offres.has_previous %}
+                    <a href="?page=1{% if statut_actuel %}&statut={{ statut_actuel }}{% endif %}" class="page-link">&laquo;</a>
+                    <a href="?page={{ appels_offres.previous_page_number }}{% if statut_actuel %}&statut={{ statut_actuel }}{% endif %}" class="page-link">‹</a>
+                {% endif %}
+
+                <span class="page-current">
+                    Page {{ appels_offres.number }} sur {{ appels_offres.paginator.num_pages }}
+                </span>
+
+                {% if appels_offres.has_next %}
+                    <a href="?page={{ appels_offres.next_page_number }}{% if statut_actuel %}&statut={{ statut_actuel }}{% endif %}" class="page-link">›</a>
+                    <a href="?page={{ appels_offres.paginator.num_pages }}{% if statut_actuel %}&statut={{ statut_actuel }}{% endif %}" class="page-link">&raquo;</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .liste-page {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 8px;
+        border: 0.5px solid #e0e2e6;
+        padding: 16px 20px;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .table-header h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .filter-form {
+        display: inline;
+    }
+
+    .table-actions select {
+        padding: 5px 10px;
+        border-radius: 5px;
+        border: 0.5px solid #d0d3d8;
+        font-size: 12px;
+        background: white;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-filter {
+        padding: 5px 12px;
+        border-radius: 5px;
+        border: 0.5px solid #d0d3d8;
+        background: white;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-filter:hover {
+        background: #f0f2f4;
+    }
+
+    .table-ao {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .table-ao thead th {
+        text-align: left;
+        padding: 8px 6px;
+        font-weight: 600;
+        color: #666;
+        border-bottom: 0.5px solid #e8eaed;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .table-ao tbody td {
+        padding: 10px 6px;
+        border-bottom: 0.5px solid #f0f2f4;
+        vertical-align: middle;
+    }
+
+    .table-ao tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    .ref-link {
+        color: var(--tg-blue, #116E9B);
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .ref-link:hover {
+        text-decoration: underline;
+    }
+
+    .badge {
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .badge.brouillon {
+        background: #f8f9fa;
+        color: #495057;
+    }
+
+    .badge.grille_en_attente {
+        background: #fff3cd;
+        color: #664d03;
+    }
+
+    .badge.en_cours {
+        background: #cfe2ff;
+        color: #052c65;
+    }
+
+    .badge.juge {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+
+    .badge.cloture {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .btn-sm {
+        padding: 3px 10px;
+        border-radius: 4px;
+        border: none;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-blue {
+        background: var(--tg-blue, #116E9B);
+        color: white;
+    }
+
+    .btn-blue:hover {
+        background: #0e5a7e;
+    }
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 12px;
+        margin-top: 4px;
+        border-top: 0.5px solid #e8eaed;
+        font-size: 12px;
+        color: #666;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .pagination {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .page-link {
+        padding: 4px 10px;
+        border-radius: 4px;
+        border: 0.5px solid #d0d3d8;
+        background: white;
+        font-size: 12px;
+        color: #333;
+        text-decoration: none;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .page-link:hover {
+        background: #f0f2f4;
+    }
+
+    .page-current {
+        padding: 4px 10px;
+        font-size: 12px;
+        color: #666;
+    }
+
+    .text-muted {
+        color: #999;
+        font-size: 12px;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    @media (max-width: 768px) {
+        .table-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .table-actions {
+            flex-wrap: wrap;
+        }
+
+        .table-ao {
+            font-size: 11px;
+        }
+
+        .table-ao thead th,
+        .table-ao tbody td {
+            padding: 6px 4px;
+        }
+
+        .table-footer {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+</style>
+{% endblock %}

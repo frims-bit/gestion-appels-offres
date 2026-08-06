@@ -1,0 +1,989 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Détail - {{ appel_offre.reference }}{% endblock %}
+{% block current_page %}{{ appel_offre.reference }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{% url 'home' %}">Accueil</a>
+    <span class="separator">›</span>
+    <a href="{% url 'liste_ao' %}">Appels d'offres</a>
+    <span class="separator">›</span>
+    <span class="current">{{ appel_offre.reference }}</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-page {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .detail-layout {
+        display: grid;
+        grid-template-columns: 1fr 240px;
+        gap: 20px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 8px;
+        border: 0.5px solid #e0e2e6;
+        padding: 16px 20px;
+    }
+
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .detail-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .detail-sub {
+        font-size: 13px;
+        color: #666;
+        margin: 2px 0 0;
+    }
+
+    .detail-meta {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        padding-top: 12px;
+        border-top: 0.5px solid #e8eaed;
+    }
+
+    .meta-label {
+        display: block;
+        font-size: 11px;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .meta-value {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    .badge {
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .badge.brouillon {
+        background: #f8f9fa;
+        color: #495057;
+    }
+
+    .badge.grille_en_attente {
+        background: #fff3cd;
+        color: #664d03;
+    }
+
+    .badge.en_cours {
+        background: #cfe2ff;
+        color: #052c65;
+    }
+
+    .badge.juge {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+
+    .badge.cloture {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .badge-green {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+
+    .badge-yellow {
+        background: #fff3cd;
+        color: #664d03;
+    }
+
+    .badge-red {
+        background: #f8d7da;
+        color: #58151c;
+    }
+
+    .badge-cat {
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .badge-fin {
+        background: #cfe2ff;
+        color: #052c65;
+    }
+
+    .badge-tech {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+
+    .badge-admin {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .badge-groupe {
+        background: #e8f4fd;
+        color: #0c447c;
+        font-size: 9px;
+        padding: 1px 6px;
+        border-radius: 10px;
+        margin-left: 4px;
+    }
+
+    .status-yes {
+        color: var(--tg-green, #43a842);
+    }
+
+    .status-no {
+        color: var(--tg-red, #D11135);
+    }
+
+    .col-num {
+        width: 5%;
+    }
+
+    .col-libelle {
+        width: 40%;
+    }
+
+    .col-categorie {
+        width: 15%;
+    }
+
+    .col-note {
+        width: 12%;
+    }
+
+    .col-statut {
+        width: 13%;
+    }
+
+    .col-actions {
+        width: 15%;
+    }
+
+    .col-entreprise {
+        width: 35%;
+    }
+
+    .col-prix {
+        width: 20%;
+    }
+
+    .col-soumissionnaire-statut {
+        width: 20%;
+    }
+
+    .col-soumissionnaire-actions {
+        width: 20%;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .table-header h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .total-points {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .total-points strong {
+        color: var(--tg-text);
+        font-size: 14px;
+    }
+
+    .table-criteres {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .table-criteres thead th {
+        text-align: left;
+        padding: 8px 6px;
+        font-weight: 600;
+        color: #666;
+        border-bottom: 0.5px solid #e8eaed;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .table-criteres tbody td {
+        padding: 10px 6px;
+        border-bottom: 0.5px solid #f0f2f4;
+        vertical-align: middle;
+    }
+
+    .table-criteres tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    /* Table des soumissionnaires */
+    .table-soumissionnaires {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .table-soumissionnaires thead th {
+        text-align: left;
+        padding: 8px 6px;
+        font-weight: 600;
+        color: #666;
+        border-bottom: 0.5px solid #e8eaed;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .table-soumissionnaires tbody td {
+        padding: 10px 6px;
+        border-bottom: 0.5px solid #f0f2f4;
+        vertical-align: middle;
+    }
+
+    .table-soumissionnaires tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    .btn {
+        padding: 6px 16px;
+        border-radius: 5px;
+        border: none;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-sm {
+        padding: 3px 8px;
+        border-radius: 4px;
+        border: none;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-warning {
+        background: var(--tg-yellow, #EAC802);
+        color: #333;
+    }
+
+    .btn-warning:hover {
+        background: #d4b502;
+    }
+
+    .btn-outline-primary {
+        background: transparent;
+        color: var(--tg-blue, #116E9B);
+        border: 0.5px solid var(--tg-blue, #116E9B);
+    }
+
+    .btn-outline-primary:hover {
+        background: #f0f6fb;
+    }
+
+    .btn-outline-danger {
+        background: transparent;
+        color: var(--tg-red, #D11135);
+        border: 0.5px solid var(--tg-red, #D11135);
+    }
+
+    .btn-outline-danger:hover {
+        background: #fdf6f6;
+    }
+
+    .btn-primary {
+        background: var(--tg-green, #43a842);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #3a9638;
+    }
+
+    .btn-outline-secondary {
+        background: transparent;
+        color: #666;
+        border: 0.5px solid #d0d3d8;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f0f2f4;
+    }
+
+    .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+
+    .btn-info:hover {
+        background: #138496;
+    }
+
+    .full-width {
+        width: 100%;
+    }
+
+    .sidebar-card {
+        margin-bottom: 16px;
+    }
+
+    .sidebar-card:last-child {
+        margin-bottom: 0;
+    }
+
+    .sidebar-card h4 {
+        font-size: 12px;
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn-sm+.btn-sm {
+        margin-left: 4px;
+    }
+
+    .text-muted {
+        color: #999;
+        font-size: 12px;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .modal-content {
+        border-radius: 12px;
+    }
+
+    .modal-header {
+        background: linear-gradient(to right, #116E9B, #026B58);
+        color: white;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.7;
+    }
+
+    .modal-header .btn-close:hover {
+        opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+        .detail-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .detail-meta {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .table-criteres,
+        .table-soumissionnaires {
+            font-size: 11px;
+        }
+
+        .table-criteres thead th,
+        .table-criteres tbody td,
+        .table-soumissionnaires thead th,
+        .table-soumissionnaires tbody td {
+            padding: 6px 4px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+    <div class="detail-layout">
+
+        <!-- Colonne principale -->
+        <div class="detail-main">
+
+            <!-- Informations générales -->
+            <div class="card">
+                <div class="detail-header">
+                    <div>
+                        <h2>{{ appel_offre.reference }}</h2>
+                        <p class="detail-sub">{{ appel_offre.titre }}</p>
+                    </div>
+                    <span class="badge {{ appel_offre.statut }}">
+                        {{ appel_offre.get_statut_display }}
+                    </span>
+                </div>
+
+                <div class="detail-meta">
+                    <div>
+                        <span class="meta-label">Date de publication</span>
+                        <span class="meta-value">{{ appel_offre.date_publication }}</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">Soumissionnaires</span>
+                        <span class="meta-value">{{ appel_offre.soumissionnaires.count }}</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">Critères</span>
+                        <span class="meta-value">{{ appel_offre.criteres.count }}</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">PV généré</span>
+                        <span class="meta-value">
+                            {% if appel_offre.proces_verbal %}
+                                <i class="ti ti-check" style="color:var(--tg-green, #43a842);"></i> Oui
+                            {% else %}
+                                <i class="ti ti-x" style="color:var(--tg-red, #D11135);"></i> Non
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Critères -->
+            <div class="card">
+                <div class="table-header">
+                    <h3><i class="ti ti-list"></i> Critères d'évaluation</h3>
+                    <div class="table-actions">
+                        <span class="total-points">Total : <strong id="total-points">0</strong> pts</span>
+                        {% if user.role == 'evaluateur' and appel_offre.statut != 'cloture' %}
+                            <a href="{% url 'validation_grille' appel_offre.id %}" class="btn btn-warning btn-sm">
+                                <i class="ti ti-edit"></i> Modifier la grille
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <table class="table-criteres">
+                    <thead>
+                        <tr>
+                            <th style="width:5%;">#</th>
+                            <th style="width:40%;">Libellé</th>
+                            <th style="width:15%;">Catégorie</th>
+                            <th style="width:12%;">Note max</th>
+                            <th style="width:13%;">Statut</th>
+                            <th style="width:15%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for critere in appel_offre.criteres.all %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    {{ critere.libelle }}
+                                    {% if critere.est_un_groupe %}
+                                        <span class="badge-groupe">Groupe</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge-cat 
+                                        {% if critere.categorie == 'technique' %}badge-tech
+                                        {% elif critere.categorie == 'financier' %}badge-fin
+                                        {% else %}badge-admin{% endif %}">
+                                        {{ critere.get_categorie_display }}
+                                    </span>
+                                </td>
+                                <td>{{ critere.note_max }}</td>
+                                <td>
+                                    {% if critere.valide %}
+                                        <span class="badge badge-green">Validé</span>
+                                    {% else %}
+                                        <span class="badge badge-yellow">En attente</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.role == 'evaluateur' and appel_offre.statut != 'cloture' %}
+                                        <button type="button" class="btn btn-sm btn-outline-primary btn-modify-critere" 
+                                                data-id="{{ critere.id }}" 
+                                                data-libelle="{{ critere.libelle|escapejs }}" 
+                                                data-categorie="{{ critere.categorie }}" 
+                                                data-type="{{ critere.type_groupe }}" 
+                                                data-note="{{ critere.note_max }}"
+                                                title="Modifier">
+                                            <i class="ti ti-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-delete-critere" 
+                                                data-id="{{ critere.id }}" 
+                                                data-libelle="{{ critere.libelle|escapejs }}" 
+                                                title="Supprimer">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Aucun critère</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Soumissionnaires -->
+            <div class="card">
+                <div class="table-header">
+                    <h3><i class="ti ti-users"></i> Soumissionnaires</h3>
+                    <span class="text-muted">{{ appel_offre.soumissionnaires.count }} soumissionnaires</span>
+                    {% if user.role == 'secretaire' %}
+                        <a href="{% url 'upload_dossier' %}" class="btn btn-sm btn-primary">
+                            <i class="ti ti-upload"></i> Ajouter
+                        </a>
+                    {% endif %}
+                </div>
+
+                <table class="table-soumissionnaires">
+                    <thead>
+                        <tr>
+                            <th style="width:5%;">#</th>
+                            <th style="width:35%;">Entreprise</th>
+                            <th style="width:20%;">Prix (FCFA)</th>
+                            <th style="width:20%;">Statut</th>
+                            <th style="width:20%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in appel_offre.soumissionnaires.all %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ s.nom_entreprise }}</td>
+                                <td>{{ s.prix_corrige|default:"-" }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if s.statut_final == 'retenu' %}badge-green
+                                        {% elif s.statut_final == 'ecarte' %}badge-red
+                                        {% else %}badge-yellow{% endif %}">
+                                        {{ s.get_statut_final_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-info btn-view-soumissionnaire" 
+                                            data-id="{{ s.id }}" 
+                                            data-nom="{{ s.nom_entreprise|escapejs }}"
+                                            title="Voir les détails">
+                                        <i class="ti ti-eye"></i>
+                                    </button>
+                                    {% if user.role == 'secretaire' or user.role == 'evaluateur' %}
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-delete-soumissionnaire" 
+                                                data-id="{{ s.id }}" 
+                                                data-nom="{{ s.nom_entreprise|escapejs }}"
+                                                title="Supprimer">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    Aucun soumissionnaire pour cet appel d'offres.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Informations attributaire -->
+{% if appel_offre.statut == 'juge' or appel_offre.statut == 'cloture' %}
+    {% with attributaire=appel_offre.soumissionnaires.filter.statut_final.retenu.first %}
+        <div class="card mt-3">
+            <div class="table-header">
+                <h3><i class="ti ti-address-book"></i> Informations attributaire</h3>
+                <span class="text-muted">À compléter avant la génération du PV</span>
+            </div>
+            <form method="post" action="{% url 'update_attributaire' appel_offre.id %}">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Adresse</label>
+                            <input type="text" name="adresse" class="form-control" title="Adresse" placeholder="Adresse"
+                                   value="{{ attributaire.adresse|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Téléphone</label>
+                            <input type="text" name="telephone" class="form-control" title="Téléphone" placeholder="Téléphone"
+                                   value="{{ attributaire.telephone|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" class="form-control" title="Email"
+                                   value="{{ attributaire.email|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Nationalité</label>
+                            <input type="text" name="nationalite" class="form-control" title="Nationalité"
+                                   value="{{ attributaire.nationalite|default:'Togolaise' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="adresse">Adresse</label>
+                            <input id="adresse" type="text" name="adresse" class="form-control" 
+                                   placeholder="Adresse" value="{{ attributaire.adresse|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-save"></i> Enregistrer les informations
+                    </button>
+                </div>
+            </form>
+        </div>
+    {% endwith %}
+{% endif %}
+
+        <!-- Sidebar -->
+        <div class="detail-sidebar">
+            <div class="card sidebar-card">
+                <h4>Actions</h4>
+                <div class="action-buttons">
+                    {% if user.role == 'evaluateur' or user.role == 'president' %}
+                        {% if appel_offre.statut == 'juge' or appel_offre.statut == 'en_cours' %}
+                            <a href="{% url 'classement' appel_offre.id %}" class="btn btn-primary full-width">
+                                <i class="ti ti-trophy"></i> Voir classement
+                            </a>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if user.role == 'evaluateur' and appel_offre.statut == 'grille_en_attente' %}
+                        <a href="{% url 'validation_grille' appel_offre.id %}" class="btn btn-warning full-width">
+                            <i class="ti ti-check"></i> Valider la grille
+                        </a>
+                    {% endif %}
+
+                    <a href="{% url 'liste_ao' %}" class="btn btn-outline-secondary full-width">
+                        <i class="ti ti-arrow-left"></i> Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== MODAL : Modifier un critère ===== -->
+<div class="modal fade" id="modifierCritereModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'modifier_critere' %}" id="form-modifier-critere">
+                {% csrf_token %}
+                <input type="hidden" name="critere_id" id="modif_critere_id">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modifier le critère</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="modif_libelle" class="form-label">Libellé</label>
+                        <input type="text" name="libelle" id="modif_libelle" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modif_categorie" class="form-label">Catégorie</label>
+                        <select name="categorie" id="modif_categorie" class="form-select">
+                            <option value="administratif">Administratif</option>
+                            <option value="technique">Technique</option>
+                            <option value="financier">Financier</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modif_type" class="form-label">Type</label>
+                        <select name="type_groupe" id="modif_type" class="form-select">
+                            <option value="notable">Notable</option>
+                            <option value="eliminatoire">Éliminatoire</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modif_note" class="form-label">Note max</label>
+                        <input type="number" name="note_max" id="modif_note" class="form-control" step="0.5" min="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL : Supprimer un critère ===== -->
+<div class="modal fade" id="supprimerCritereModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'supprimer_critere' %}" id="form-supprimer-critere">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="supprimer">
+                <input type="hidden" name="critere_id" id="supprimer-critere-id">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmer la suppression</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Voulez-vous vraiment supprimer le critère : <strong id="supprimer-critere-libelle"></strong> ?</p>
+                    <p class="text-muted small">Cette action est irréversible.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL : Détails du soumissionnaire ===== -->
+<div class="modal fade" id="detailsSoumissionnaireModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="details-soumissionnaire-titre">Détails du soumissionnaire</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body" id="details-soumissionnaire-body">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Chargement des détails...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL : Supprimer un soumissionnaire ===== -->
+<div class="modal fade" id="supprimerSoumissionnaireModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Voulez-vous vraiment supprimer le soumissionnaire : <strong id="supprimer-soumissionnaire-nom"></strong> ?</p>
+                <p class="text-muted small">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="btn-confirmer-suppression-soumissionnaire">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // === Calculer le total des notes ===
+        const notes = document.querySelectorAll('.table-criteres tbody td:nth-child(4)');
+        let total = 0;
+        notes.forEach(td => {
+            total += parseFloat(td.textContent) || 0;
+        });
+        const totalDisplay = document.getElementById('total-points');
+        if (totalDisplay) {
+            totalDisplay.textContent = total.toFixed(2);
+        }
+
+        // === Modifier un critère ===
+        document.querySelectorAll('.btn-modify-critere').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const libelle = this.dataset.libelle;
+                const categorie = this.dataset.categorie;
+                const type = this.dataset.type || 'notable';
+                const note = this.dataset.note || 0;
+
+                document.getElementById('modif_critere_id').value = id;
+                document.getElementById('modif_libelle').value = libelle;
+                document.getElementById('modif_categorie').value = categorie;
+                document.getElementById('modif_type').value = type;
+                document.getElementById('modif_note').value = note;
+
+                const modal = new bootstrap.Modal(document.getElementById('modifierCritereModal'));
+                modal.show();
+            });
+        });
+
+        // === Supprimer un critère ===
+        document.querySelectorAll('.btn-delete-critere').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const libelle = this.dataset.libelle;
+
+                document.getElementById('supprimer-critere-id').value = id;
+                document.getElementById('supprimer-critere-libelle').textContent = libelle;
+
+                const modal = new bootstrap.Modal(document.getElementById('supprimerCritereModal'));
+                modal.show();
+            });
+        });
+
+        // === Voir les détails d'un soumissionnaire ===
+        document.querySelectorAll('.btn-view-soumissionnaire').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const nom = this.dataset.nom;
+
+                const modalEl = document.getElementById('detailsSoumissionnaireModal');
+                const title = document.getElementById('details-soumissionnaire-titre');
+                const body = document.getElementById('details-soumissionnaire-body');
+
+                title.textContent = 'Détails - ' + nom;
+
+                body.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Chargement des détails...</p>
+                    </div>
+                `;
+
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+
+                fetch(`/soumissionnaires/api/soumissionnaire/${id}/details/`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Erreur de chargement');
+                        return response.json();
+                    })
+                    .then(data => {
+                        let html = `
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p><strong>Entreprise :</strong> ${data.nom_entreprise}</p>
+                                    <p><strong>Prix corrigé :</strong> ${data.prix_corrige || 'Non défini'} FCFA</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Statut final :</strong> <span class="badge ${data.statut_final === 'retenu' ? 'badge-green' : 'badge-yellow'}">${data.statut_final}</span></p>
+                                    ${data.motif_rejet ? `<p><strong>Motif :</strong> <span style="color:var(--tg-red)">${data.motif_rejet}</span></p>` : ''}
+                                </div>
+                            </div>
+                            <h6>Données extraites par critère :</h6>
+                            <ul class="list-group list-group-flush">
+                                ${data.criteres.map(c => `
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>${c.libelle}</span>
+                                        <span>${c.valeur_extraite || 'Non extrait'}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        `;
+                        body.innerHTML = html;
+                    })
+                    .catch(error => {
+                        body.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="ti ti-alert-circle"></i> Erreur : ${error.message}
+                            </div>
+                        `;
+                    });
+            });
+        });
+
+        // === Supprimer un soumissionnaire ===
+        let soumissionnaireASupprimer = null;
+
+        document.querySelectorAll('.btn-delete-soumissionnaire').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const nom = this.dataset.nom;
+
+                soumissionnaireASupprimer = id;
+                document.getElementById('supprimer-soumissionnaire-nom').textContent = nom;
+
+                const modal = new bootstrap.Modal(document.getElementById('supprimerSoumissionnaireModal'));
+                modal.show();
+            });
+        });
+
+        document.getElementById('btn-confirmer-suppression-soumissionnaire').addEventListener('click', function() {
+            if (!soumissionnaireASupprimer) return;
+
+            fetch(`/soumissionnaires/api/soumissionnaire/${soumissionnaireASupprimer}/supprimer/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la suppression');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
