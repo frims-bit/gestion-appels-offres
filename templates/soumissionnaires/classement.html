@@ -13,506 +13,543 @@
 {% endblock %}
 
 {% block content %}
-<div class="classement-page">
-
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="card">
-        <div class="table-header">
-            <h3>Classement des soumissionnaires</h3>
-            <span class="text-muted">{{ appel_offre.reference }} • {{ appel_offre.titre }}</span>
+<div class="page-stack">
+    <section class="page-hero">
+        <div>
+            <p class="eyebrow">Analyse finale</p>
+            <h1>Classement des soumissionnaires</h1>
+            <p class="lead">{{ appel_offre.reference }} · {{ appel_offre.titre }}</p>
         </div>
+        <div class="hero-actions">
+            <a href="{% url 'generer_pv' appel_offre.id %}" class="btn btn-primary"><i class="ti ti-file-text"></i> Générer le PV</a>
+            <a href="{% url 'detail_ao' appel_offre.id %}" class="btn btn-secondary"><i class="ti ti-arrow-left"></i> Retour</a>
+        </div>
+    </section>
 
-        <table class="table-classement">
-            <thead>
-                <tr>
-                    <th style="width:8%;">Rang</th>
-                    <th style="width:25%;">Soumissionnaire</th>
-                    <th style="width:18%;">Prix corrigé (FCFA)</th>
-                    <th style="width:18%;">Statut</th>
-                    <th style="width:20%;">Motif</th>
-                    <th style="width:11%;">Détails</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for s in classement %}
-                    <tr class="
-                        {% if forloop.first and s.statut_final == 'retenu' %}row-attributaire
-                        {% elif s.statut_final == 'ecarte' %}row-ecarte{% endif %}
-                    ">
-                        <td>
-                            <span class="rank-circle 
-                                {% if forloop.first %}rank-1
-                                {% elif s.statut_final == 'ecarte' %}rank-gray{% endif %}">
-                                {{ s.rang|default:"-" }}
-                            </span>
-                        </td>
-                        <td>
-                            {% if forloop.first and s.statut_final == 'retenu' %}
-                                <strong>{{ s.nom_entreprise }}</strong>
-                            {% else %}
-                                {{ s.nom_entreprise }}
-                            {% endif %}
-                        </td>
-                        <td class="
-                            {% if forloop.first and s.statut_final == 'retenu' %}montant-green
-                            {% elif s.statut_final == 'ecarte' %}montant-gray{% endif %}">
-                            {{ s.prix_corrige|default:"—" }}
-                        </td>
-                        <td>
-                            {% if s.statut_final == 'retenu' %}
-                                <span class="badge badge-green">✓ Attributaire proposé</span>
-                            {% elif s.statut_final == 'ecarte' %}
-                                <span class="badge badge-red">✗ Écarté</span>
-                            {% elif s.statut_conformite == 'conforme_technique' %}
-                                <span class="badge badge-blue">Conforme</span>
-                            {% else %}
-                                <span class="badge badge-yellow">En cours</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if s.motif_rejet %}
-                                <span class="motif-red">{{ s.motif_rejet }}</span>
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-info"
-                                    data-id="{{ s.id }}"
-                                    onclick="voirDetails(this.getAttribute('data-id'))"
-                                    title="Voir les détails du soumissionnaire">
-                                <i class="ti ti-eye"></i>
-                            </button>
-                        </td>
-                    </tr>
-                {% empty %}
+    <section class="card-panel">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td colspan="6" class="text-center text-muted">
-                            Aucun soumissionnaire classé pour cet appel d'offres.
-                        </td>
+                        <th>Rang</th>
+                        <th>Soumissionnaire</th>
+                        <th>Prix financier</th>
+                        <th>Statut</th>
+                        <th>Motif</th>
+                        <th>Actions</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for s in classement %}
+                        <tr class="{% if forloop.first and s.statut_final == 'retenu' %}row-highlight{% elif s.statut_final == 'ecarte' %}row-muted{% endif %}" data-soumissionnaire-row="{{ s.id }}">
+                            <td><span class="rank-badge" data-rank>{{ s.rang|default:"-" }}</span></td>
+                            <td>{{ s.nom_entreprise }}</td>
+                            <td data-prix-cell>
+                                {% if user.role == 'evaluateur' or user.role == 'president' %}
+                                    {% if s.statut_conformite == 'conforme_technique' and s.prix_financier_a_saisir %}
+                                        <form class="inline-grid finance-form" data-soumissionnaire-id="{{ s.id }}">
+                                            <input type="number" step="0.01" min="0" name="prix_lu_publiquement" value="{{ s.prix_lu_publiquement|default_if_none:'' }}" placeholder="Prix lu">
+                                            <input type="number" step="0.01" min="0" name="prix_corrige" value="{{ s.prix_corrige|default_if_none:'' }}" placeholder="Prix corrigé">
+                                            <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-device-floppy"></i></button>
+                                        </form>
+                                    {% else %}
+                                        {{ s.prix_corrige_formate|default:"-" }}{% if s.prix_corrige_formate %} FCFA{% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    {{ s.prix_corrige_formate|default:"-" }}{% if s.prix_corrige_formate %} FCFA{% endif %}
+                                {% endif %}
+                            </td>
+                            <td data-statut-cell>
+                                {% if s.rang %}
+                                    <span class="badge badge-success">Classé</span>
+                                {% elif s.statut_final == 'ecarte' %}
+                                    <span class="badge badge-danger">Écarté</span>
+                                {% elif s.statut_conformite == 'conforme_technique' %}
+                                    <span class="badge badge-info">Conforme</span>
+                                {% elif s.statut_conformite == 'a_verifier' %}
+                                    <span class="badge badge-warning">À vérifier</span>
+                                {% else %}
+                                    <span class="badge badge-warning">En cours</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ s.motif_resume|default:"—" }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-secondary" data-id="{{ s.id }}" onclick="voirDetails(this.getAttribute('data-id'))"><i class="ti ti-eye"></i></button>
+                                {% if user.role == 'evaluateur' or user.role == 'president' %}
+                                    {% if s.statut_conformite == 'a_verifier' %}
+                                        <button type="button" class="btn btn-sm btn-outline" data-id="{{ s.id }}" onclick="ouvrirValidationManuelle(parseInt(this.getAttribute('data-id'), 10))"><i class="ti ti-check"></i></button>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" class="table-empty">Aucun soumissionnaire classé pour cet appel d'offres.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
         <div class="table-footer">
-            <span>{{ classement|length }} soumissionnaires</span>
-            <div class="form-actions">
-                <a href="{% url 'generer_pv' appel_offre.id %}" class="btn btn-primary">
-                    <i class="ti ti-file-text"></i> Générer le PV
-                </a>
-                <a href="{% url 'detail_ao' appel_offre.id %}" class="btn btn-secondary-custom">
-                    <i class="ti ti-arrow-left"></i> Retour
-                </a>
-            </div>
+            <span>{{ classement|length }} soumissionnaire(s)</span>
         </div>
-    </div>
+    </section>
 </div>
 
-<!-- MODAL DÉTAILS -->
+<form style="display:none">{% csrf_token %}</form>
+
 <div class="modal fade" id="detailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="detailsModalTitle">Détails du soumissionnaire</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer la fenêtre"></button>
             </div>
-            <div class="modal-body" id="detailsBody">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Chargement...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Chargement des détails...</p>
-                </div>
-            </div>
+            <button type="button" class="modal-close" data-close-modal aria-label="Fermer">&times;</button>
+            <div class="modal-body" id="detailsBody"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-secondary" data-close-modal>Fermer</button>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .classement-page {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .table-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 14px;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .table-header h3 {
-        font-size: 14px;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .text-muted {
-        color: #999;
-        font-size: 12px;
-    }
-
-    .table-classement {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
-    }
-
-    .table-classement thead th {
-        text-align: left;
-        padding: 8px 6px;
-        font-weight: 600;
-        color: #666;
-        border-bottom: 0.5px solid #e8eaed;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-
-    .table-classement tbody td {
-        padding: 10px 6px;
-        border-bottom: 0.5px solid #f0f2f4;
-        vertical-align: middle;
-    }
-
-    .table-classement tbody tr:hover {
-        background: #fafbfc;
-    }
-
-    .row-attributaire {
-        background: #f5faf5;
-    }
-
-    .row-ecarte {
-        background: #fdf6f6;
-    }
-
-    .rank-circle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: #e9ecef;
-        color: #495057;
-        font-size: 11px;
-        font-weight: 600;
-    }
-
-    .rank-1 {
-        background: var(--tg-green, #43a842);
-        color: white;
-    }
-
-    .rank-gray {
-        background: #adb5bd;
-        color: white;
-    }
-
-    .montant-green {
-        color: var(--tg-green, #43a842);
-        font-weight: 600;
-    }
-
-    .montant-gray {
-        color: #aaa;
-    }
-
-    .motif-red {
-        color: var(--tg-red, #D11135);
-        font-size: 11px;
-    }
-
-    .badge {
-        padding: 2px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 500;
-    }
-
-    .badge-green {
-        background: #d1e7dd;
-        color: #0a3622;
-    }
-
-    .badge-red {
-        background: #f8d7da;
-        color: #58151c;
-    }
-
-    .badge-blue {
-        background: #cfe2ff;
-        color: #052c65;
-    }
-
-    .badge-yellow {
-        background: #fff3cd;
-        color: #664d03;
-    }
-
-    .btn-sm {
-        padding: 3px 8px;
-        border-radius: 4px;
-        border: none;
-        font-size: 11px;
-        font-weight: 500;
-        cursor: pointer;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .btn-info {
-        background: #17a2b8;
-        color: white;
-    }
-
-    .btn-info:hover {
-        background: #138496;
-    }
-
-    .table-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-top: 12px;
-        margin-top: 4px;
-        border-top: 0.5px solid #e8eaed;
-        font-size: 12px;
-        color: #666;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .form-actions {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .btn {
-        padding: 6px 16px;
-        border-radius: 5px;
-        border: none;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .btn-primary {
-        background: var(--tg-green, #43a842);
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background: #3a9638;
-    }
-
-    .btn-secondary-custom {
-        background: #e9ecef;
-        color: #495057;
-    }
-
-    .btn-secondary-custom:hover {
-        background: #dee2e6;
-    }
-
-    .alert {
-        padding: 12px 16px;
-        border-radius: 6px;
-        font-size: 13px;
-    }
-
-    .alert-success {
-        background: #d1e7dd;
-        color: #0a3622;
-        border-left: 4px solid var(--tg-green, #43a842);
-    }
-
-    .alert-error {
-        background: #f8d7da;
-        color: #58151c;
-        border-left: 4px solid var(--tg-red, #D11135);
-    }
-
-    /* Modal Détails */
-    .modal-content {
-        border-radius: 12px;
-    }
-
-    .modal-header {
-        background: linear-gradient(to right, #116E9B, #026B58);
-        color: white;
-        border-radius: 12px 12px 0 0;
-    }
-
-    .modal-header .btn-close {
-        filter: brightness(0) invert(1);
-    }
-
-    .detail-category {
-        margin-bottom: 16px;
-    }
-
-    .detail-category h6 {
-        font-weight: 600;
-        color: #116E9B;
-        border-bottom: 2px solid #43a842;
-        padding-bottom: 4px;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .detail-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 4px 0;
-        border-bottom: 0.5px solid #f0f2f4;
-        font-size: 12px;
-    }
-
-    .detail-item .label {
-        color: #666;
-    }
-
-    .detail-item .value {
-        font-weight: 500;
-    }
-
-    .detail-item .value.present {
-        color: #43a842;
-    }
-
-    .detail-item .value.absent {
-        color: #D11135;
-    }
-
-    .text-center {
-        text-align: center;
-    }
-
-    .py-4 {
-        padding-top: 24px;
-        padding-bottom: 24px;
-    }
-</style>
-
-<script>
-    function voirDetails(id) {
-        const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
-        const body = document.getElementById('detailsBody');
-        const title = document.getElementById('detailsModalTitle');
-
-        body.innerHTML = `
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Chargement...</span>
-                </div>
-                <p class="mt-2 text-muted">Chargement des détails...</p>
+<div class="modal fade" id="validationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="validationModalTitle">Validation des elements incertains</h5>
             </div>
-        `;
+            <button type="button" class="modal-close" data-close-modal aria-label="Fermer">&times;</button>
+            <div class="modal-body" id="validationBody"></div>
+            <div class="modal-footer" id="validationFooter">
+                <button type="button" class="btn btn-secondary" data-close-modal>Annuler</button>
+                <button type="button" class="btn btn-primary" id="btn-validation-action">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+(() => {
+    const API_DETAILS = "{% url 'soumissionnaire_details' 0 %}";
+    const API_VALIDATE = "{% url 'valider_manuellement' 0 %}";
+    const API_PRIX = "{% url 'update_prix_financier' 0 %}";
+    let detailsCourants = null;
+    let fileValidation = [];
+    let indexValidation = 0;
+    let decisionCourante = "confirmer";
+
+    const html = (value) => String(value ?? "-").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+    }[char]));
+
+    const classeBadge = (etat) => {
+        if (etat === "present") return "badge-success";
+        if (etat === "incertain") return "badge-warning";
+        return "badge-danger";
+    };
+
+    const getModal = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        return {
+            show: () => {
+                el.style.display = "";
+                el.classList.add("show");
+                el.removeAttribute("aria-hidden");
+                document.body.classList.add("modal-open");
+            },
+            hide: () => {
+                el.style.display = "none";
+                el.classList.remove("show");
+                el.setAttribute("aria-hidden", "true");
+                if (!document.querySelector(".modal.show")) {
+                    document.body.classList.remove("modal-open");
+                }
+            },
+        };
+    };
+
+    const closeModal = (modalOrId) => {
+        const el = typeof modalOrId === "string" ? document.getElementById(modalOrId) : modalOrId;
+        if (!el) return;
+        el.style.display = "none";
+        el.classList.remove("show");
+        el.setAttribute("aria-hidden", "true");
+        if (!document.querySelector(".modal.show")) {
+            document.body.classList.remove("modal-open");
+        }
+    };
+
+    document.addEventListener("click", (event) => {
+        const closeButton = event.target.closest("[data-close-modal], [data-bs-dismiss='modal']");
+        if (closeButton) {
+            closeModal(closeButton.closest(".modal"));
+            return;
+        }
+        if (event.target.classList?.contains("modal")) {
+            closeModal(event.target);
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            closeModal(document.querySelector(".modal.show"));
+        }
+    });
+
+    const csrfToken = () => {
+        const input = document.querySelector("input[name='csrfmiddlewaretoken']");
+        if (input && input.value) return input.value;
+        const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : "";
+    };
+
+    window.voirDetails = async (soumissionnaireId) => {
+        const modal = getModal("detailsModal");
+        const body = document.getElementById("detailsBody");
+        const title = document.getElementById("detailsModalTitle");
+        if (!modal || !body || !title) return;
+
+        body.innerHTML = "<p>Chargement...</p>";
+        title.textContent = "Détails du soumissionnaire";
         modal.show();
 
-        fetch(`/soumissionnaires/api/soumissionnaire/${id}/details/`)
-            .then(response => {
-                if (!response.ok) throw new Error('Erreur de chargement');
-                return response.json();
-            })
-            .then(data => {
-                title.textContent = `Détails - ${data.nom_entreprise}`;
-                let html = '';
-
-                // Informations générales
-                html += `
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><strong>Entreprise :</strong> ${data.nom_entreprise}</p>
-                            <p><strong>Prix corrigé :</strong> ${data.prix_corrige || 'Non défini'} FCFA</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Statut :</strong> <span class="badge ${data.statut_final === 'retenu' ? 'badge-green' : 'badge-yellow'}">${data.statut_final}</span></p>
-                            ${data.motif_rejet ? `<p><strong>Motif :</strong> <span style="color:var(--tg-red);">${data.motif_rejet}</span></p>` : ''}
-                        </div>
-                    </div>
-                `;
-
-                // Critères par catégorie
-                const categories = {
-                    'administratif': { label: '📂 Administratif', icon: 'ti ti-file-text' },
-                    'technique': { label: '🔧 Technique', icon: 'ti ti-settings' },
-                    'financier': { label: '💰 Financier', icon: 'ti ti-currency-franc' }
-                };
-
-                for (const [cat, info] of Object.entries(categories)) {
-                    const items = data.criteres.filter(c => c.categorie === cat);
-                    if (items.length === 0) continue;
-
-                    html += `
-                        <div class="detail-category">
-                            <h6><i class="${info.icon}"></i> ${info.label}</h6>
-                    `;
-
-                    for (const item of items) {
-                        const isPresent = item.valeur_extraite && item.valeur_extraite.trim() !== '';
-                        const statusClass = isPresent ? 'present' : 'absent';
-                        const statusText = isPresent ? '✅ Présent' : '❌ Non fourni';
-
-                        html += `
-                            <div class="detail-item">
-                                <span class="label">${item.libelle}</span>
-                                <span class="value ${statusClass}">${statusText}</span>
-                            </div>
-                        `;
-                    }
-
-                    html += `</div>`;
-                }
-
-                // Justifications IA
-                if (data.justifications && data.justifications.length > 0) {
-                    html += `
-                        <div class="detail-category">
-                            <h6><i class="ti ti-robot"></i> Justifications de l'IA</h6>
-                    `;
-                    for (const j of data.justifications) {
-                        html += `
-                            <div class="detail-item">
-                                <span class="label">${j.critere}</span>
-                                <span class="value" style="font-size:11px;color:#666;">${j.justification}</span>
-                            </div>
-                        `;
-                    }
-                    html += `</div>`;
-                }
-
-                body.innerHTML = html;
-            })
-            .catch(error => {
-                body.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="ti ti-alert-circle"></i> ${error.message}
-                    </div>
-                `;
+        try {
+            const response = await fetch(API_DETAILS.replace("/0/", `/${soumissionnaireId}/`), {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
             });
-    }
+            const data = await response.json();
+            detailsCourants = data;
+            body.innerHTML = `
+                <div class="page-stack">
+                    <section class="card-panel">
+                        <h3>Informations de l'entreprise</h3>
+                        <div class="detail-list">
+                            <div><span>Nom</span><strong>${data.entreprise?.nom || data.nom_entreprise || "-"}</strong></div>
+                            <div><span>Adresse</span><strong>${data.entreprise?.adresse || "-"}</strong></div>
+                            <div><span>Téléphone</span><strong>${data.entreprise?.telephone || "-"}</strong></div>
+                            <div><span>Email</span><strong>${data.entreprise?.email || "-"}</strong></div>
+                            <div><span>Nationalité</span><strong>${data.entreprise?.nationalite || "-"}</strong></div>
+                            <div><span>Bénéficiaires effectifs</span><strong>${data.entreprise?.beneficiaires_effectifs || "-"}</strong></div>
+                        </div>
+                    </section>
+                    <section class="card-panel">
+                        <h3>Informations financières</h3>
+                        <div class="detail-list">
+                            <div><span>Prix proposé</span><strong>${data.prix_lu_publiquement_formate || "-"}</strong></div>
+                            <div><span>Prix corrigé</span><strong>${data.prix_corrige_formate || "-"}</strong></div>
+                        </div>
+                    </section>
+                    <section class="card-panel">
+                        <h3>Statut</h3>
+                        <div class="detail-list">
+                            <div><span>Conformité</span><strong>${data.statut_conformite_label || "-"}</strong></div>
+                            <div><span>Final</span><strong>${data.statut_final_label || "-"}</strong></div>
+                            <div><span>Motif</span><strong>${data.motif_resume || data.motif_rejet || "-"}</strong></div>
+                        </div>
+                    </section>
+                    <section class="card-panel">
+                        <h3>Données extraites</h3>
+                        ${Array.isArray(data.criteres) && data.criteres.length ? `
+                            <div class="table-wrap details-table-wrap">
+                                <table class="data-table details-criteria-table">
+                                    <thead><tr><th>Critère</th><th>Valeur extraite</th><th>Statut</th><th>Justification</th><th>Action</th></tr></thead>
+                                    <tbody>
+                                        ${data.criteres.map((critere, index) => `
+                                            <tr>
+                                                <td>${critere.libelle || "-"}</td>
+                                                <td>${critere.valeur_extraite || "-"}</td>
+                                                <td><span class="badge ${critere.etat === 'present' ? 'success' : critere.etat === 'incertain' ? 'warning' : 'danger'}">${critere.raison_etat || critere.etat || "-"}</span></td>
+                                                <td>${critere.justification_ia || "-"}</td>
+                                                <td class="actions-cell"><button type="button" class="btn btn-sm btn-primary" data-validate-one="${index}">Modifier</button></td>
+                                            </tr>
+                                        `).join("")}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : '<p>Aucune donnée extraite.</p>'}
+                    </section>
+                </div>
+            `;
+        } catch (error) {
+            body.innerHTML = "<p>Impossible de charger les détails.</p>";
+        }
+    };
+
+    window.ouvrirValidationManuelle = async (soumissionnaireId) => {
+        const modal = getModal("validationModal");
+        const body = document.getElementById("validationBody");
+        if (!modal || !body) return;
+
+        body.innerHTML = `
+            <input type="hidden" id="validation-soumissionnaire-id" value="${soumissionnaireId}">
+            <label class="form-row">Motif
+                <textarea id="validation-motif" rows="4" class="form-control" placeholder="Motif obligatoire selon le cas"></textarea>
+            </label>
+            <p class="text-muted">Les données absentes ou incertaines peuvent être corrigées ici.</p>
+        `;
+        modal.show();
+    };
+
+    document.addEventListener("click", async (event) => {
+        const target = event.target.closest("#btn-confirmer-present, #btn-confirmer-absent");
+        if (!target) return;
+
+        const idEl = document.getElementById("validation-soumissionnaire-id");
+        const motifEl = document.getElementById("validation-motif");
+        const soumissionnaireId = idEl?.value;
+        const motif = motifEl?.value?.trim() || "";
+        const decision = target.id === "btn-confirmer-present" ? "present" : "absent";
+
+        if (!soumissionnaireId) return;
+        if (decision === "absent" && !motif) {
+            alert("Un motif est obligatoire pour confirmer absent / non conforme.");
+            return;
+        }
+
+        try {
+            const response = await fetch(API_VALIDATE.replace("/0/", `/${soumissionnaireId}/`), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": csrfToken(),
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                body: new URLSearchParams({
+                    decision,
+                    motif,
+                    correction_ia: "0",
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                alert(data.error || "Validation impossible");
+                return;
+            }
+
+            window.location.reload();
+        } catch (error) {
+            alert("Erreur réseau pendant la validation.");
+        }
+    });
+
+    const definirDecision = (decision) => {
+        decisionCourante = decision;
+        document.querySelectorAll("[data-validation-decision]").forEach((button) => {
+            const actif = button.dataset.validationDecision === decision;
+            button.classList.toggle("btn-primary", actif);
+            button.classList.toggle("btn-secondary", !actif);
+        });
+        const motif = document.getElementById("validation-motif");
+        const action = document.getElementById("btn-validation-action");
+        if (motif) motif.placeholder = "Motif obligatoire";
+        if (action) action.textContent = "Enregistrer";
+    };
+
+    const afficherValidationElement = () => {
+        const body = document.getElementById("validationBody");
+        const footer = document.getElementById("validationFooter");
+        if (!body || !footer) return;
+
+        if (!fileValidation.length || indexValidation >= fileValidation.length) {
+            body.innerHTML = `
+                <section class="card-panel">
+                    <h3>Validation terminee</h3>
+                    <p>Tous les elements a verifier ont ete traites. Le recalcul a ete declenche apres chaque decision.</p>
+                </section>
+            `;
+            footer.innerHTML = '<button type="button" class="btn btn-primary" data-close-modal onclick="window.location.reload()">Terminer</button>';
+            return;
+        }
+
+        const critere = fileValidation[indexValidation];
+        footer.innerHTML = `
+            <button type="button" class="btn btn-secondary" data-close-modal>Annuler</button>
+            <button type="button" class="btn btn-primary" id="btn-validation-action">Confirmer</button>
+        `;
+        body.innerHTML = `
+            <input type="hidden" id="validation-soumissionnaire-id" value="${html(detailsCourants.id)}">
+            <input type="hidden" id="validation-donnee-id" value="${html(critere.id || "")}">
+            <input type="hidden" id="validation-critere-id" value="${html(critere.critere_id || "")}">
+            <div class="page-stack">
+                <section class="card-panel">
+                    <p class="eyebrow">Element ${indexValidation + 1} / ${fileValidation.length}</p>
+                    <h3>${html(critere.libelle)}</h3>
+                    <div class="detail-list">
+                        <div><span>Soumissionnaire</span><strong>${html(detailsCourants.nom_entreprise)}</strong></div>
+                        <div><span>Valeur extraite par l'IA</span><strong>${html(critere.valeur_extraite)}</strong></div>
+                        <div><span>Statut actuel</span><strong>${html((critere.etat || "").toUpperCase())}</strong></div>
+                        <div><span>Page document</span><strong>${html(critere.page || critere.page_document || "Non renseignee")}</strong></div>
+                    </div>
+                </section>
+                <section class="card-panel">
+                    <h3>Justification et preuve IA</h3>
+                    <p>${html(critere.justification_ia || "Aucune justification IA fournie.")}</p>
+                    <p class="text-muted">${html(critere.raison_etat || "Element marque incertain.")}</p>
+                </section>
+                <section class="card-panel">
+                    <h3>Decision humaine</h3>
+                    <div class="hero-actions">
+                        <button type="button" class="btn btn-primary" data-validation-decision="present">Conforme</button>
+                        <button type="button" class="btn btn-secondary" data-validation-decision="absent">Non conforme</button>
+                        <button type="button" class="btn btn-secondary" data-validation-decision="incertain">Incertain</button>
+                    </div>
+                    <label class="form-row">Motif
+                        <textarea id="validation-motif" rows="4" class="form-control" placeholder="Motif obligatoire"></textarea>
+                    </label>
+                </section>
+            </div>
+        `;
+        definirDecision("present");
+    };
+
+    window.ouvrirValidationManuelle = async (soumissionnaireId, indexCible = null) => {
+        const modal = getModal("validationModal");
+        const body = document.getElementById("validationBody");
+        if (!modal || !body) return;
+
+        body.innerHTML = "<p>Chargement des elements a verifier...</p>";
+        modal.show();
+
+        try {
+            const response = await fetch(API_DETAILS.replace("/0/", `/${soumissionnaireId}/`), {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+            });
+            detailsCourants = await response.json();
+            if (!response.ok) throw new Error(detailsCourants.error || "Details indisponibles");
+
+            const aVerifier = indexCible !== null
+                ? (detailsCourants.criteres || [])
+                : (Array.isArray(detailsCourants.criteres_a_verifier)
+                    ? detailsCourants.criteres_a_verifier
+                    : (detailsCourants.criteres || []).filter((critere) => ["absent", "incertain"].includes(critere.etat)));
+            fileValidation = aVerifier;
+            if (indexCible !== null) {
+                const cible = detailsCourants.criteres[indexCible];
+                const position = aVerifier.findIndex((critere) => critere.critere_id === cible?.critere_id);
+                indexValidation = position >= 0 ? position : 0;
+            } else {
+                indexValidation = 0;
+            }
+            afficherValidationElement();
+        } catch (error) {
+            body.innerHTML = "<p>Impossible de charger les elements a verifier.</p>";
+        }
+    };
+
+    document.addEventListener("click", (event) => {
+        const decisionButton = event.target.closest("[data-validation-decision]");
+        if (decisionButton) {
+            definirDecision(decisionButton.dataset.validationDecision);
+            return;
+        }
+
+        const oneButton = event.target.closest("[data-validate-one]");
+        if (oneButton && detailsCourants?.id) {
+            window.ouvrirValidationManuelle(detailsCourants.id, parseInt(oneButton.dataset.validateOne, 10));
+        }
+    });
+
+    document.addEventListener("click", async (event) => {
+        const target = event.target.closest("#btn-validation-action");
+        if (!target) return;
+
+        const soumissionnaireId = document.getElementById("validation-soumissionnaire-id")?.value;
+        const donneeId = document.getElementById("validation-donnee-id")?.value;
+        const critereId = document.getElementById("validation-critere-id")?.value;
+        const motif = document.getElementById("validation-motif")?.value?.trim() || "";
+        if (!soumissionnaireId || !fileValidation[indexValidation]) return;
+        if (!motif && ["absent", "incertain"].includes(decisionCourante)) {
+            alert("Un motif est obligatoire pour une decision non conforme ou incertaine.");
+            return;
+        }
+
+        target.disabled = true;
+        try {
+            const response = await fetch(API_VALIDATE.replace("/0/", `/${soumissionnaireId}/`), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": csrfToken(),
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                body: new URLSearchParams({
+                    decision: decisionCourante,
+                    motif,
+                    correction_ia: donneeId || critereId ? "1" : "0",
+                    donnee_id: donneeId || "",
+                    critere_id: critereId || "",
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                alert(data.error || data.message || "Validation impossible");
+                return;
+            }
+
+            const courant = fileValidation[indexValidation];
+            const donneeRetour = Array.isArray(data.donnees) ? data.donnees.find((donnee) => String(donnee.id) === String(courant.id)) : null;
+            courant.etat = decisionCourante;
+            courant.raison_etat = "Decision humaine enregistree.";
+            courant.valeur_extraite = donneeRetour?.valeur_extraite || courant.valeur_extraite;
+            courant.justification_ia = donneeRetour?.justification_ia || courant.justification_ia;
+
+            indexValidation += 1;
+            afficherValidationElement();
+            window.voirDetails(soumissionnaireId);
+        } catch (error) {
+            alert("Erreur reseau pendant la validation.");
+        } finally {
+            target.disabled = false;
+        }
+    });
+
+    document.querySelectorAll(".finance-form").forEach((form) => {
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const soumissionnaireId = form.dataset.soumissionnaireId;
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(API_PRIX.replace("/0/", `/${soumissionnaireId}/`), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": csrfToken(),
+                    },
+                    body: formData,
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    alert(data.error || "Prix invalide");
+                    return;
+                }
+                const row = form.closest("[data-soumissionnaire-row]");
+                const prixCell = form.closest("[data-prix-cell]");
+                const rankCell = row?.querySelector("[data-rank]");
+                const statutCell = row?.querySelector("[data-statut-cell]");
+                if (prixCell) {
+                    prixCell.innerHTML = `${html(data.prix_corrige_formate || "-")}${data.prix_corrige_formate ? " FCFA" : ""}`;
+                }
+                if (rankCell) {
+                    rankCell.textContent = data.rang || "-";
+                }
+                if (statutCell) {
+                    statutCell.innerHTML = `<span class="badge badge-info">${html(data.statut_conformite_label || "Conforme")}</span>`;
+                }
+            } catch (error) {
+                alert("Erreur réseau pendant la mise à jour du prix.");
+            }
+        });
+    });
+})();
 </script>
 {% endblock %}

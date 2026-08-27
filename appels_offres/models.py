@@ -21,6 +21,11 @@ class AppelOffre(models.Model):
     def __str__(self):
         return f"{self.reference} - {self.titre}"
 
+    @property
+    def grille_evaluee(self):
+        criteres = self.criteres.all()
+        return criteres.exists() and not criteres.filter(valide=False).exists()
+
 
 class CritereGrille(models.Model):
     class Categorie(models.TextChoices):

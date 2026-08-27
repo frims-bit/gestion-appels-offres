@@ -29,7 +29,7 @@ SECRET_KEY = "django-insecure-z*e#z)2nkqkdr=3)m+_ve^x@!d(*0(bo0ki$zuj3*_vac%*zl7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
 
 
 # Application definition
@@ -84,15 +84,33 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.sqlite3")
+
+if DB_ENGINE == "django.db.backends.sqlite3":
+    DATABASES = {
+        "default": {
+            "ENGINE": DB_ENGINE,
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": DB_ENGINE,
+            "NAME": os.getenv("DB_NAME", "gestion_appels_offres"),
+            "USER": os.getenv("DB_USER", ""),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+            "PORT": os.getenv("DB_PORT", "3306"),
+            "OPTIONS": {
+                "charset": os.getenv("DB_CHARSET", "utf8mb4"),
+            },
+        }
+    }
 
 
 AUTH_USER_MODEL = "utilisateurs.Utilisateur"
+LOGIN_URL = "/utilisateurs/login/"
 
 
 # Password validation
@@ -140,8 +158,5 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-
-
-import os
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")

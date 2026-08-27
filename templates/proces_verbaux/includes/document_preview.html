@@ -1,0 +1,167 @@
+{% load static %}
+<div class="official-doc-shell">
+    <article class="official-doc-page">
+        <header class="official-doc-header">
+            <div class="official-doc-brand">
+                <img src="{% static 'images/logo-togo.svg' %}" alt="République Togolaise" class="official-doc-logo">
+                <div>
+                    <p>Republique Togolaise</p>
+                    <strong>
+                        {% if type_document == "rapport" %}
+                            RAPPORT D'EVALUATION DES OFFRES
+                        {% elif type_document == "pv" %}
+                            PROCES-VERBAL D'EVALUATION DES OFFRES
+                        {% else %}
+                            {{ document_title|default:"DOCUMENT D'EVALUATION" }}
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+            <div class="official-doc-meta">
+                <span>Reference : {{ document_context.appel_offre.reference }}</span>
+                <span>Date : {{ document_context.appel_offre.date_publication }}</span>
+            </div>
+        </header>
+
+        <section class="official-doc-title">
+            {% if document_context.appel_offre.autorite_contractante != "Non renseigne" %}
+                <p>{{ document_context.appel_offre.autorite_contractante }}</p>
+            {% endif %}
+            <h1>
+                {% if type_document == "rapport" %}
+                    RAPPORT D'EVALUATION DES OFFRES
+                {% elif type_document == "pv" %}
+                    PROCES-VERBAL D'EVALUATION DES OFFRES
+                {% else %}
+                    {{ document_title|default:"DOCUMENT D'EVALUATION" }}
+                {% endif %}
+            </h1>
+            <dl>
+                <div><dt>Reference</dt><dd>{{ document_context.appel_offre.reference }}</dd></div>
+                <div><dt>Objet</dt><dd>{{ document_context.appel_offre.objet }}</dd></div>
+                <div><dt>Statut</dt><dd>{{ document_context.appel_offre.statut }}</dd></div>
+            </dl>
+        </section>
+
+        <section class="official-doc-section">
+            <h2>{{ section_1_title|default:"I. Informations sur l'appel d'offres" }}</h2>
+            <table>
+                <tbody>
+                    <tr><th>Reference</th><td>{{ document_context.appel_offre.reference }}</td></tr>
+                    <tr><th>Objet</th><td>{{ document_context.appel_offre.objet }}</td></tr>
+                    <tr><th>Date de publication</th><td>{{ document_context.appel_offre.date_publication }}</td></tr>
+                    <tr><th>Statut</th><td>{{ document_context.appel_offre.statut }}</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="official-doc-section">
+            <h2>{{ section_2_title|default:"II. Soumissionnaires" }}</h2>
+            <table>
+                <thead>
+                    {% if type_document == "pv" %}
+                        <tr><th>Entreprise</th><th>Conformite</th><th>Resultat</th><th>Rang</th></tr>
+                    {% else %}
+                        <tr><th>Entreprise</th><th>Date de depot</th><th>Statut</th><th>Rang</th></tr>
+                    {% endif %}
+                </thead>
+                <tbody>
+                    {% for row in document_context.soumissionnaires %}
+                        {% if type_document == "pv" %}
+                            <tr><td>{{ row.nom }}</td><td>{{ row.statut }}</td><td>{{ row.statut_final }}</td><td>{{ row.rang }}</td></tr>
+                        {% else %}
+                            <tr><td>{{ row.nom }}</td><td>{{ row.date_depot }}</td><td>{{ row.statut }}</td><td>{{ row.rang }}</td></tr>
+                        {% endif %}
+                    {% empty %}
+                        <tr><td colspan="4">Aucun soumissionnaire disponible.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        {% if type_document != "pv" %}
+        <section class="official-doc-section">
+            <h2>{{ section_3_title|default:"III. Examen de la recevabilite" }}</h2>
+            <table>
+                <thead><tr><th>Soumissionnaire</th><th>Critere</th><th>Valeur</th><th>Statut</th><th>Justification</th></tr></thead>
+                <tbody>
+                    {% for row in document_context.recevabilite %}
+                        <tr><td>{{ row.soumissionnaire }}</td><td>{{ row.critere }}</td><td>{{ row.valeur }}</td><td>{{ row.statut }}</td><td>{{ row.justification }}</td></tr>
+                    {% empty %}
+                        <tr><td colspan="5">Aucune donnee de recevabilite disponible.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section class="official-doc-section">
+            <h2>{{ section_4_title|default:"IV. Evaluation technique" }}</h2>
+            <table>
+                <thead><tr><th>Soumissionnaire</th><th>Critere</th><th>Valeur</th><th>Statut</th><th>Score</th><th>Justification</th></tr></thead>
+                <tbody>
+                    {% for row in document_context.technique %}
+                        <tr><td>{{ row.soumissionnaire }}</td><td>{{ row.critere }}</td><td>{{ row.valeur }}</td><td>{{ row.statut }}</td><td>{{ row.score }}</td><td>{{ row.justification }}</td></tr>
+                    {% empty %}
+                        <tr><td colspan="6">Aucune donnee technique disponible.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section class="official-doc-section">
+            <h2>{{ section_5_title|default:"V. Evaluation financiere" }}</h2>
+            <table>
+                <thead><tr><th>Soumissionnaire</th><th>Prix lu</th><th>Prix corrige</th><th>Statut</th><th>Rang</th></tr></thead>
+                <tbody>
+                    {% for row in document_context.financier %}
+                        <tr><td>{{ row.soumissionnaire }}</td><td>{{ row.prix_lu }}</td><td>{{ row.prix_corrige }}</td><td>{{ row.statut }}</td><td>{{ row.rang }}</td></tr>
+                    {% empty %}
+                        <tr><td colspan="5">Aucune donnee financiere disponible.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        <section class="official-doc-section">
+            <h2>{{ section_6_title|default:"VI. Classement final" }}</h2>
+            <table>
+                <thead><tr><th>Rang</th><th>Entreprise</th><th>Statut</th><th>Prix</th><th>Score</th></tr></thead>
+                <tbody>
+                    {% for row in document_context.classement %}
+                        <tr><td>{{ row.rang }}</td><td>{{ row.soumissionnaire }}</td><td>{{ row.statut }}</td><td>{{ row.prix }}</td><td>{{ row.score }}</td></tr>
+                    {% empty %}
+                        <tr><td colspan="5">Aucun classement final disponible.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section class="official-doc-section">
+            <h2>{{ section_7_title|default:"VII. Attributaire" }}</h2>
+            {% if document_context.attributaire %}
+                <table>
+                    <tbody>
+                        <tr><th>Entreprise</th><td>{{ document_context.attributaire.nom }}</td></tr>
+                        <tr><th>Adresse</th><td>{{ document_context.attributaire.adresse }}</td></tr>
+                        <tr><th>Telephone</th><td>{{ document_context.attributaire.telephone }}</td></tr>
+                        <tr><th>Email</th><td>{{ document_context.attributaire.email }}</td></tr>
+                        <tr><th>Montant</th><td>{{ document_context.attributaire.prix }}</td></tr>
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucun attributaire retenu n'est enregistre.</p>
+            {% endif %}
+        </section>
+
+        <section class="official-doc-section">
+            <h2>{{ section_8_title|default:"VIII. Conclusion" }}</h2>
+            <p>{{ document_context.conclusion }}</p>
+        </section>
+
+        <footer class="official-doc-footer">
+            <span>Signatures</span>
+            <span>President de la commission</span>
+        </footer>
+    </article>
+</div>

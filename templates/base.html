@@ -3,134 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Marchés Publics{% endblock %}</title>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Tabler Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
-
+    <title>{% block title %}AO Intelligence{% endblock %}</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <script defer src="{% static 'js/app.js' %}"></script>
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-
-    <!-- TOP BAR -->
-    <div class="topbar">
-        <div class="topbar-inner">
-            <div class="topbar-left">
-                <span class="topbar-tab active">Citoyens</span>
-                <span class="topbar-tab">Entreprises / Associations / Professions libérales</span>
-            </div>
-            <div class="topbar-right">
-                <a href="#">Annuaire de l'administration</a>
-                <span class="separator">|</span>
-                <a href="#">FAQ</a>
-            </div>
+<body class="{% block body_class %}{% if user.is_authenticated %}app-shell{% else %}auth-shell{% endif %}{% endblock %}">
+{% block layout %}
+    {% if user.is_authenticated %}
+    <div class="app-shell-layout">
+        {% include "components/sidebar.html" %}
+        <div class="app-shell-main">
+            {% include "components/header.html" %}
+            <main class="app-content">
+                {% include "components/alerts.html" %}
+                {% block page_header %}{% endblock %}
+                {% block content %}{% endblock %}
+            </main>
         </div>
     </div>
-    
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <!-- <div class="navbar-inner"> -->
-            <div class="navbar-left">
-                <div class="navbar-logo-circle">
-                    <span>RT</span>
-                </div>
-                <div class="navbar-brand">
-                    <span class="brand-title">Marchés Publics</span>
-                    <span class="brand-sub">Ministère de l'Efficacité du Service Public</span>
-                </div>
-            </div>
-            <div class="navbar-right">
-                {% if user.is_authenticated %}
-                    <div class="navbar-user">
-                        <div class="user-avatar">{{ user.username|make_list|first|upper }}</div>
-                        <span class="user-name">{{ user.username }}</span>
-                        <span class="user-role-badge">{{ user.get_role_display }}</span>
-                    </div>
-                    <a href="{% url 'logout' %}" class="btn-logout">
-                        <i class="ti ti-logout"></i>
-                    </a>
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn-login">Se connecter</a>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
-
-    <!-- BREADCRUMB -->
-    <div class="breadcrumb">
-        <div class="breadcrumb-inner">
-            {% block breadcrumb %}
-                <a href="{% url 'home' %}">Accueil</a>
-                <span class="separator">›</span>
-                <span class="current">{% block current_page %}Tableau de bord{% endblock %}</span>
-            {% endblock %}
-        </div>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-        {% block content %}{% endblock %}
+    {% else %}
+    <main class="auth-layout">
+        {% include "components/alerts.html" %}
+        {% block auth_content %}{% endblock %}
     </main>
-
-    <!-- FOOTER -->
-    <footer class="footer">
-        <div class="footer-inner">
-            <div class="footer-grid">
-                <div>
-                    <h5>NAVIGATION</h5>
-                    <ul>
-                        <li><a href="{% url 'home' %}">Accueil</a></li>
-                        <li><a href="#">Services</a></li>
-                        <li><a href="#">Contact</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h5>INFORMATIONS</h5>
-                    <ul>
-                        <li><a href="#">À propos</a></li>
-                        <li><a href="#">FAQ</a></li>
-                        <li><a href="#">Mentions légales</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h5>LIENS PRATIQUES</h5>
-                    <ul>
-                        <li><a href="#">Code des Marchés Publics</a></li>
-                        <li><a href="#">Portail GouvTG</a></li>
-                        <li><a href="#">Lomé Data Centre</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <a href="{% url 'login' %}" class="btn-footer-primary">Se connecter</a>
-                    <a href="#" class="btn-footer-secondary">Une question ?</a>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <div class="footer-bottom-inner">
-                <div class="footer-logo-circle">
-                    <span>RT</span>
-                </div>
-                <span>République Togolaise</span>
-                <span class="separator">•</span>
-                <span>© TOGO AI LAB</span>
-            </div>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.js"></script>
-    {% block extra_js %}{% endblock %}
+    {% endif %}
+{% endblock %}
+{% block extra_js %}{% endblock %}
 </body>
 </html>
+

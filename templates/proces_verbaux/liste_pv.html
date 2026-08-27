@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}PV{% endblock %}
+{% block current_page %}PV{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+    <section class="page-hero">
+        <h1 class="page-title">Procès-verbaux</h1>
+        <p class="page-subtitle">Consultation des PV générés.</p>
+    </section>
+
+    <section class="card-panel">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Objet</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pv in pvs %}
+                        <tr>
+                            <td class="wrap-text"><strong>{{ pv.appel_offre.reference }}</strong></td>
+                            <td class="wrap-text">{{ pv.appel_offre.titre }}</td>
+                            <td>{{ pv.date_generation|date:"d/m/Y H:i" }}</td>
+                            <td><span class="badge {{ pv.statut }}">{{ pv.get_statut_display }}</span></td>
+                            <td>
+                                <div class="hero-actions">
+                                    <a href="{% url 'detail_pv' pv.id %}" class="btn-sm btn-blue">Consulter</a>
+                                    {% if pv.fichier %}
+                                        <a href="{% url 'telecharger_pv' pv.appel_offre.id %}" class="btn-sm">Télécharger</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="table-empty">Aucun PV généré.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

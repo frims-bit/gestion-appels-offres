@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Traitement des dossiers{% endblock %}
+{% block current_page %}Traitement des dossiers{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+    <section class="page-hero">
+        <div>
+            <p class="eyebrow">Flux dossier</p>
+            <h1>Traitement des dossiers</h1>
+            <p class="lead">{{ appel_offre.reference }} · {{ appel_offre.titre }}</p>
+        </div>
+    </section>
+
+    <section class="card-panel">
+        <div class="empty-state">
+            <h3>Transmission terminée</h3>
+            <p>Les dossiers ont bien été reçus et transmis à l'évaluation.</p>
+        </div>
+
+        <div class="stats-grid stats-grid-3">
+            <div class="stat-card"><span>Fichiers reçus</span><strong>OK</strong></div>
+            <div class="stat-card"><span>Préparation</span><strong>OK</strong></div>
+            <div class="stat-card"><span>Évaluation</span><strong>OK</strong></div>
+        </div>
+
+        <div class="alert-inline alert-success">
+            <i class="ti ti-check"></i>
+            <div>
+                <strong>Upload terminé</strong>
+                <p>{{ dossiers|length }} dossier(s) pour {{ appel_offre.reference }} ont été transmis à l'évaluation.</p>
+            </div>
+        </div>
+
+        <div class="section-actions">
+            <a href="{% url 'upload_dossier' %}" class="btn btn-primary"><i class="ti ti-upload"></i> Nouveau dépôt</a>
+            <a href="{% url 'mes_depots' %}" class="btn btn-secondary"><i class="ti ti-folder"></i> Mes dépôts</a>
+        </div>
+    </section>
+</div>
+{% endblock %}

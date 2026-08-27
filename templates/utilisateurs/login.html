@@ -1,296 +1,55 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Connexion - Marchés Publics{% endblock %}
-{% block current_page %}Connexion{% endblock %}
+{% block title %}Connexion - AO Intelligence{% endblock %}
+{% block body_class %}auth-shell{% endblock %}
 
-{% block content %}
-<div class="login-container">
-    <div class="login-card">
-
-        <!-- Header -->
-        <div class="login-header">
-            <div class="login-icon-circle">
-                <i class="ti ti-lock"></i>
+{% block layout %}
+<main class="auth-layout">
+    {% include "components/alerts.html" %}
+    <section class="login-shell" aria-label="Connexion AO Intelligence">
+        <div class="login-visual">
+            <div class="login-brand">
+                <img src="{% static 'images/logo-togo.svg' %}" alt="Republique Togolaise">
+                <div>
+                    <strong>AO Intelligence</strong>
+                    <span>GovTech Platform</span>
+                </div>
             </div>
-            <h2>Accès sécurisé</h2>
-            <p>Connectez-vous à la plateforme</p>
+
+            <div class="login-copy">
+                <p class="eyebrow">Plateforme institutionnelle</p>
+                <h1>Gestion des appels d'offres publics</h1>
+                <p>Traitement, evaluation, classement et suivi des dossiers dans un espace securise pour les commissions.</p>
+            </div>
+
+            <div class="login-proof">
+                <span><i class="ti ti-shield-check"></i> Acces par role</span>
+                <span><i class="ti ti-file-analytics"></i> Suivi des evaluations</span>
+            </div>
         </div>
 
-        <!-- Body -->
-        <div class="login-body">
-            <form method="post">
+        <div class="login-panel">
+            <div class="form-heading">
+                <p class="eyebrow">Connexion securisee</p>
+                <h2>Bienvenue</h2>
+                <p>Accedez a votre espace selon votre profil.</p>
+            </div>
+
+            <form method="post" class="form-grid" data-loading>
                 {% csrf_token %}
-
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" placeholder="email@domaine.tg" required>
+                <div class="form-row">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required autocomplete="email" placeholder="prenom.nom@etat.tg">
                 </div>
-
-                <div class="form-group">
-                    <label>Mot de passe</label>
-                    <div class="password-wrapper">
-                        <input type="password" name="password" placeholder="••••••••" required>
-                        <button type="button" class="toggle-password" onclick="togglePassword(this)" aria-label="Afficher le mot de passe" title="Afficher le mot de passe">
-                            <i class="ti ti-eye" aria-hidden="true"></i>
-                        </button>
-                    </div>
+                <div class="form-row">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Mot de passe">
                 </div>
-
-                <div class="form-actions">
-                    <a href="#" class="forgot-link">Mot de passe oublié ?</a>
-                    <button type="submit" class="btn-login-full">Connexion</button>
-                </div>
+                <button type="submit" class="btn btn-primary btn-block"><i class="ti ti-login-2"></i> Connexion</button>
             </form>
-
-            <div class="divider">
-                <span>Accès par rôle</span>
-            </div>
-
-            <div class="role-grid">
-                <div class="role-card">
-                    <i class="ti ti-clipboard"></i>
-                    <span>Secrétaire</span>
-                </div>
-                <div class="role-card active">
-                    <i class="ti ti-checklist"></i>
-                    <span>Évaluateur</span>
-                </div>
-                <div class="role-card">
-                    <i class="ti ti-crown"></i>
-                    <span>Président</span>
-                </div>
-            </div>
-
-            <div class="login-security">
-                <i class="ti ti-lock"></i>
-                <span>Connexion sécurisée — données hébergées au Lomé Data Centre</span>
-            </div>
         </div>
-
-    </div>
-</div>
-
-<style>
-    .login-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: calc(100vh - 300px);
-        padding: 20px;
-    }
-
-    .login-card {
-        max-width: 420px;
-        width: 100%;
-        background: white;
-        border-radius: 12px;
-        border: 0.5px solid #e0e2e6;
-        overflow: hidden;
-    }
-
-    .login-header {
-        background: linear-gradient(to right, #116E9B, #026B58);
-        padding: 24px 24px 20px;
-        text-align: center;
-        color: white;
-    }
-
-    .login-icon-circle {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        border: 1.5px solid rgba(255, 255, 255, 0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 10px;
-        font-size: 20px;
-    }
-
-    .login-header h2 {
-        font-size: 15px;
-        font-weight: 600;
-        margin-bottom: 4px;
-    }
-
-    .login-header p {
-        font-size: 12px;
-        opacity: 0.75;
-        margin: 0;
-    }
-
-    .login-body {
-        padding: 24px;
-    }
-
-    .form-group {
-        margin-bottom: 16px;
-    }
-
-    .form-group label {
-        display: block;
-        font-size: 12px;
-        font-weight: 500;
-        margin-bottom: 4px;
-        color: #333;
-    }
-
-    .form-group input {
-        width: 100%;
-        padding: 9px 12px;
-        border: 0.5px solid #d0d3d8;
-        border-radius: 6px;
-        font-size: 13px;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .form-group input:focus {
-        outline: none;
-        border-color: var(--tg-blue);
-        box-shadow: 0 0 0 2px rgba(17, 110, 155, 0.1);
-    }
-
-    .password-wrapper {
-        position: relative;
-    }
-
-    .password-wrapper input {
-        padding-right: 40px;
-    }
-
-    .toggle-password {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: #999;
-        cursor: pointer;
-        padding: 4px;
-    }
-
-    .form-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 4px;
-    }
-
-    .forgot-link {
-        font-size: 12px;
-        color: var(--tg-green);
-        text-decoration: none;
-    }
-
-    .forgot-link:hover {
-        text-decoration: underline;
-    }
-
-    .btn-login-full {
-        background: var(--tg-green);
-        color: white;
-        padding: 9px 28px;
-        border-radius: 5px;
-        border: none;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .btn-login-full:hover {
-        background: #3a9638;
-    }
-
-    .divider {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 20px 0 16px;
-        color: #999;
-        font-size: 11px;
-    }
-
-    .divider::before,
-    .divider::after {
-        content: '';
-        flex: 1;
-        height: 0.5px;
-        background: #d5d7da;
-    }
-
-    .role-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 8px;
-        margin-bottom: 16px;
-    }
-
-    .role-card {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        padding: 10px 6px;
-        border: 0.5px solid #e0e2e6;
-        border-radius: 6px;
-        font-size: 11px;
-        color: #666;
-        cursor: pointer;
-        transition: all 0.15s;
-    }
-
-    .role-card i {
-        font-size: 18px;
-        color: #999;
-    }
-
-    .role-card.active {
-        border: 1.5px solid var(--tg-blue);
-        background: #f0f6fb;
-    }
-
-    .role-card.active i {
-        color: var(--tg-blue);
-    }
-
-    .role-card.active span {
-        color: var(--tg-blue);
-        font-weight: 600;
-    }
-
-    .role-card:hover:not(.active) {
-        background: #f8f9fa;
-    }
-
-    .login-security {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        font-size: 11px;
-        color: var(--tg-mid-gray);
-        margin-top: 4px;
-    }
-
-    .login-security i {
-        font-size: 14px;
-    }
-</style>
-
-<script>
-    function togglePassword(btn) {
-        const input = btn.closest('.password-wrapper').querySelector('input');
-        const icon = btn.querySelector('i');
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.className = 'ti ti-eye-off';
-        } else {
-            input.type = 'password';
-            icon.className = 'ti ti-eye';
-        }
-    }
-</script>
+    </section>
+</main>
 {% endblock %}
+

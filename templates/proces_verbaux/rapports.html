@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Rapports{% endblock %}
+{% block current_page %}Rapports{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+    <section class="page-hero">
+        <h1 class="page-title">Rapports d'évaluation</h1>
+        <p class="page-subtitle">Rapports générés automatiquement à partir des résultats validés.</p>
+    </section>
+
+    <section class="grid-2">
+        {% for rapport in rapports %}
+            <article class="card-panel ao-card">
+                <div class="ao-card-head">
+                    <div class="ao-meta">
+                        <span class="ao-ref">{{ rapport.appel_offre.reference }}</span>
+                        <h2>{{ rapport.appel_offre.titre }}</h2>
+                    </div>
+                    {% if rapport.disponible %}
+                        <span class="status-pill ok">Rapport disponible</span>
+                    {% else %}
+                        <span class="status-pill warning">Rapport introuvable</span>
+                    {% endif %}
+                </div>
+                <p><strong>Date :</strong> {{ rapport.date|date:"d/m/Y" }}</p>
+                <div class="hero-actions">
+                    {% if request.user.role == 'president' and rapport.disponible == False %}
+                        <form method="post" action="{% url 'generer_rapport' rapport.appel_offre.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">Générer le rapport d'évaluation</button>
+                        </form>
+                    {% endif %}
+                    {% if rapport.disponible %}
+                        <a href="{% url 'consulter_rapport' rapport.appel_offre.id %}" class="btn btn-primary">Consulter</a>
+                        <a href="{% url 'telecharger_rapport' rapport.appel_offre.id %}" class="btn btn-secondary">Télécharger le DOCX</a>
+                    {% endif %}
+                </div>
+            </article>
+        {% empty %}
+            <section class="card-panel">
+                <div class="empty-state">
+                    <h3>Aucun rapport disponible.</h3>
+                    <p>Les rapports apparaîtront après validation et signature du PV par le président.</p>
+                </div>
+            </section>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

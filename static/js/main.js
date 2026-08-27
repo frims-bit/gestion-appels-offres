@@ -114,6 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== ALERTS AUTO-DISMISS =====
     setTimeout(() => {
         document.querySelectorAll('.alert-dismissible').forEach(alert => {
+            if (typeof bootstrap === 'undefined' || !bootstrap?.Alert) return;
             const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
             bsAlert?.close();
         });

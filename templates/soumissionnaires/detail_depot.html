@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Dossier déposé{% endblock %}
+{% block current_page %}Dossier déposé{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+    <section class="page-hero">
+        <div>
+            <p class="eyebrow">Soumissionnaire</p>
+            <h1>{{ dossier.nom_entreprise }}</h1>
+            <p class="lead">{{ appel_offre.reference }} · {{ appel_offre.titre }}</p>
+        </div>
+        <div class="hero-actions">
+            <a href="{% url 'mes_depots' %}" class="btn btn-secondary"><i class="ti ti-arrow-left"></i> Retour</a>
+        </div>
+    </section>
+
+    <section class="grid-2">
+        <div class="card-panel">
+            <div class="section-head">
+                <div>
+                    <h2>Détails du dépôt</h2>
+                    <p>Informations principales liées au dossier transmis.</p>
+                </div>
+            </div>
+            <div class="detail-list">
+                <div><span>Entreprise</span><strong>{{ dossier.nom_entreprise }}</strong></div>
+                <div><span>Date de dépôt</span><strong>{{ dossier.date_depot_dossier|date:"d/m/Y H:i" }}</strong></div>
+                <div><span>Appel d'offres</span><strong>{{ appel_offre.reference }}</strong></div>
+                <div><span>Titre</span><strong>{{ appel_offre.titre }}</strong></div>
+            </div>
+        </div>
+
+        <div class="card-panel">
+            <div class="section-head">
+                <div>
+                    <h2>Statut</h2>
+                    <p>Lecture rapide de l'état du dossier.</p>
+                </div>
+            </div>
+            <div class="empty-state">
+                <h3>Dossier reçu</h3>
+                <p>Le dossier est enregistré et prêt pour le traitement métier.</p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

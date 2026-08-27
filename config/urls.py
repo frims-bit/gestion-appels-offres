@@ -10,7 +10,6 @@ urlpatterns = [
     path('utilisateurs/', include('utilisateurs.urls')),
     path('soumissionnaires/', include('soumissionnaires.urls')),
     path('proces-verbaux/', include('proces_verbaux.urls')),
-    path('proces-verbaux/', include('proces_verbaux.urls')),  
 ]
 
 if settings.DEBUG:

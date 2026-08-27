@@ -1,0 +1,50 @@
+{% load static %}
+{% if user.is_authenticated %}
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <img src="{% static 'images/logo-togo.svg' %}" alt="République Togolaise" class="sidebar-logo">
+        <div>
+            <strong>AO Intelligence</strong>
+            <span>GovTech Platform</span>
+        </div>
+        <button class="icon-btn sidebar-close" type="button" data-toggle-sidebar aria-label="Fermer le menu">
+            <i class="ti ti-x"></i>
+        </button>
+    </div>
+    <nav class="sidebar-nav">
+        {% if user.role == 'secretaire' %}
+            <a href="{% url 'dashboard_secretaire' %}" class="{% if request.resolver_match.url_name == 'dashboard_secretaire' %}active{% endif %}"><i class="ti ti-layout-dashboard"></i><span>Dashboard</span></a>
+            <a href="{% url 'upload_ao' %}"><i class="ti ti-plus"></i><span>Nouvel AO</span></a>
+            <a href="{% url 'upload_dossier' %}"><i class="ti ti-file-upload"></i><span>Dossiers</span></a>
+            <a href="{% url 'liste_pv' %}"><i class="ti ti-file-text"></i><span>PV</span></a>
+            <a href="{% url 'rapports' %}"><i class="ti ti-report"></i><span>Rapports</span></a>
+        {% elif user.role == 'evaluateur' %}
+            <a href="{% url 'dashboard_evaluateur' %}" class="{% if request.resolver_match.url_name == 'dashboard_evaluateur' %}active{% endif %}"><i class="ti ti-layout-dashboard"></i><span>Dashboard</span></a>
+            <a href="{% url 'liste_ao' %}"><i class="ti ti-briefcase"></i><span>Appels d'offres</span></a>
+            <a href="{% url 'liste_ao' %}"><i class="ti ti-list-numbers"></i><span>Classements</span></a>
+            <a href="{% url 'liste_pv' %}"><i class="ti ti-file-text"></i><span>PV</span></a>
+            <a href="{% url 'rapports' %}"><i class="ti ti-report"></i><span>Rapports</span></a>
+        {% else %}
+            <a href="{% url 'dashboard_president' %}" class="{% if request.resolver_match.url_name == 'dashboard_president' %}active{% endif %}"><i class="ti ti-layout-dashboard"></i><span>Dashboard</span></a>
+            <a href="{% url 'liste_ao' %}"><i class="ti ti-briefcase"></i><span>Appels d'offres</span></a>
+            <a href="#"><i class="ti ti-list-numbers"></i><span>Classements</span></a>
+            <a href="{% url 'signature_pv' %}"><i class="ti ti-file-text"></i><span>PV</span></a>
+            <a href="{% url 'rapports' %}"><i class="ti ti-report"></i><span>Rapports</span></a>
+        {% endif %}
+        <a href="#" class="muted"><i class="ti ti-user-circle"></i><span>Profil</span></a>
+        <a href="{% url 'logout' %}" class="danger"><i class="ti ti-logout"></i><span>Déconnexion</span></a>
+    </nav>
+    <div class="sidebar-user">
+        <div class="user-chip">{{ user.username|make_list|first|upper }}</div>
+        <div>
+            <strong>{{ user.get_full_name|default:user.username }}</strong>
+            <span>{{ user.get_role_display }}</span>
+        </div>
+    </div>
+</aside>
+<div class="sidebar-backdrop" data-toggle-sidebar></div>
+<button class="mobile-menu-btn" type="button" data-toggle-sidebar aria-label="Ouvrir le menu">
+    <i class="ti ti-menu-2"></i>
+</button>
+{% endif %}
+

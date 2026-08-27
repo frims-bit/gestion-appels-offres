@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Apercu rapport{% endblock %}
+{% block current_page %}Rapport{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+    <section class="page-hero hero-split">
+        <div>
+            <p class="eyebrow">Apercu du rapport</p>
+            <h1 class="wrap-text">{{ appel_offre.reference }}</h1>
+            <p class="page-subtitle wrap-text">{{ appel_offre.titre }}</p>
+        </div>
+        <div class="hero-actions">
+            <a href="{% url 'telecharger_rapport' appel_offre.id %}" class="btn btn-primary"><i class="ti ti-download"></i> Telecharger le DOCX</a>
+            <a href="{% url 'rapports' %}" class="btn btn-outline"><i class="ti ti-arrow-left"></i> Retour</a>
+        </div>
+    </section>
+
+    <section class="document-preview-panel">
+        <div class="document-actions-bar">
+            <div>
+                <p class="eyebrow">Document d'evaluation</p>
+                <h2>Rapport d'evaluation</h2>
+            </div>
+        </div>
+        {% with document_title="RAPPORT D'EVALUATION DES OFFRES" type_document="rapport" section_1_title="I. Informations sur l'appel d'offres" section_2_title="II. Soumissionnaires" section_3_title="III. Examen de la recevabilite" section_4_title="IV. Evaluation technique" section_5_title="V. Evaluation financiere" section_6_title="VI. Classement final" section_7_title="VII. Attributaire" section_8_title="VIII. Conclusion" %}
+            {% include "proces_verbaux/includes/document_preview.html" %}
+        {% endwith %}
+    </section>
+</div>
+{% endblock %}

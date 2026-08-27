@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes dépôts{% endblock %}
+{% block current_page %}Mes dépôts{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <h1 class="page-title">Mes dépôts</h1>
+    <p class="page-subtitle">Suivi des appels d'offres pour lesquels des dossiers ont déjà été transmis.</p>
+</section>
+
+<div class="card">
+    <div class="toolbar">
+        <h2 class="page-title" style="font-size:20px;">Dossiers déposés</h2>
+        <a href="{% url 'upload_dossier' %}" class="btn btn-primary">Nouveau dépôt</a>
+    </div>
+
+    <div class="table-wrap" style="margin-top:16px;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Titre</th>
+                    <th>Dossiers</th>
+                    <th>Dernier dépôt</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ao, dossiers in depots.items %}
+                    <tr>
+                        <td><strong>{{ ao.reference }}</strong></td>
+                        <td>{{ ao.titre|truncatechars:70 }}</td>
+                        <td>{{ dossiers|length }}</td>
+                        <td>{{ dossiers.0.date_depot_dossier|date:"d/m/Y H:i" }}</td>
+                        <td><a href="{% url 'detail_depot' ao.id %}" class="btn-sm btn-blue">Voir</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted">Aucun dépôt enregistré.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,78 +1,34 @@
 {% extends 'base.html' %}
-{% load static %}
 
-{% block title %}Accueil - Marchés Publics{% endblock %}
+{% block title %}Accueil - AO Intelligence{% endblock %}
 {% block current_page %}Accueil{% endblock %}
 
 {% block content %}
-<div class="home-page">
+<section class="page-hero">
+    <h1 class="page-title">Plateforme de gestion des appels d'offres</h1>
+    <p class="page-subtitle">Vue d'ensemble institutionnelle du traitement, de l'évaluation et du suivi des dossiers.</p>
+</section>
 
-    <!-- Banner -->
-    <div class="banner-home">
-        <div class="banner-content">
-            <h1>Plateforme de Gestion des Appels d'Offres</h1>
-            <p>Automatisation intelligente du traitement des appels d'offres</p>
-            <p class="banner-sub">Ministère de l'Efficacité du Service Public et de la Transformation Numérique</p>
-            {% if not user.is_authenticated %}
-                <a href="{% url 'login' %}" class="btn-banner">Se connecter</a>
-            {% endif %}
-        </div>
+<section class="stats-grid">
+    <article class="metric-card"><span class="metric-label">Appels d'offres</span><strong class="metric-value">{{ total_ao|default:0 }}</strong></article>
+    <article class="metric-card"><span class="metric-label">Soumissionnaires</span><strong class="metric-value">{{ total_soumissionnaires|default:0 }}</strong></article>
+    <article class="metric-card"><span class="metric-label">PV générés</span><strong class="metric-value">{{ total_pv|default:0 }}</strong></article>
+    <article class="metric-card"><span class="metric-label">PV validés</span><strong class="metric-value">{{ total_valides|default:0 }}</strong></article>
+</section>
+
+<div class="card" style="margin-top:18px;">
+    <div class="table-header">
+        <h2 class="page-title" style="font-size:20px;">Derniers appels d'offres</h2>
+        {% if user.is_authenticated and user.role == 'secretaire' %}
+            <a href="{% url 'upload_ao' %}" class="btn btn-primary">Initialiser un appel d'offres</a>
+        {% endif %}
     </div>
-
-    <!-- Métriques -->
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <span class="metric-label">Appels d'offres</span>
-            <span class="metric-value" style="color: var(--tg-blue, #116E9B);">{{ total_ao|default:0 }}</span>
-        </div>
-        <div class="metric-card">
-            <span class="metric-label">Soumissionnaires</span>
-            <span class="metric-value" style="color: var(--tg-dark-green, #026B58);">{{ total_soumissionnaires|default:0 }}</span>
-        </div>
-        <div class="metric-card">
-            <span class="metric-label">PV générés</span>
-            <span class="metric-value" style="color: var(--tg-green, #43a842);">{{ total_pv|default:0 }}</span>
-        </div>
-        <div class="metric-card">
-            <span class="metric-label">PV validés</span>
-            <span class="metric-value" style="color: var(--tg-orange, #EA7F02);">{{ total_valides|default:0 }}</span>
-        </div>
-    </div>
-
-    <!-- Actions rapides -->
-    <div class="card">
-        <div class="quick-actions-home">
-            {% if user.role == 'secretaire' %}
-                <a href="{% url 'upload_ao' %}" class="btn btn-primary">
-                    <i class="ti ti-upload"></i> Upload Cahier des charges
-                </a>
-                <a href="{% url 'upload_dossier' %}" class="btn btn-outline-primary">
-                    <i class="ti ti-file-upload"></i> Upload Dossiers
-                </a>
-            {% endif %}
-            {% if user.role == 'evaluateur' or user.role == 'president' %}
-                <a href="{% url 'liste_ao' %}" class="btn btn-primary">
-                    <i class="ti ti-list"></i> Voir mes AO
-                </a>
-            {% endif %}
-            {% if user.role == 'president' %}
-                <a href="{% url 'signature_pv' %}" class="btn btn-success">
-                    <i class="ti ti-pen"></i> Signer PV
-                </a>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Derniers appels d'offres -->
-    <div class="card">
-        <div class="table-header">
-            <h3>Derniers appels d'offres</h3>
-        </div>
-        <table class="table-ao">
+    <div class="table-wrap">
+        <table class="data-table">
             <thead>
                 <tr>
                     <th>Référence</th>
-                    <th>Titre</th>
+                    <th>Objet</th>
                     <th>Date</th>
                     <th>Statut</th>
                     <th>Action</th>
@@ -80,300 +36,18 @@
             </thead>
             <tbody>
                 {% for ao in derniers_ao %}
-                    <tr>
-                        <td><span class="ref-link">{{ ao.reference }}</span></td>
-                        <td>{{ ao.titre|truncatechars:50 }}</td>
-                        <td>{{ ao.date_publication }}</td>
-                        <td>
-                            <span class="badge {{ ao.statut }}">
-                                {{ ao.get_statut_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="{% url 'detail_ao' ao.id %}" class="btn-sm btn-blue">Voir</a>
-                        </td>
-                    </tr>
+                <tr>
+                    <td><strong>{{ ao.reference }}</strong></td>
+                    <td>{{ ao.titre|truncatechars:70 }}</td>
+                    <td>{{ ao.date_publication|date:"d/m/Y" }}</td>
+                    <td><span class="badge {{ ao.statut }}">{{ ao.get_statut_display }}</span></td>
+                    <td><a href="{% url 'detail_ao' ao.id %}" class="btn-sm btn-blue">Voir</a></td>
+                </tr>
                 {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted">Aucun appel d'offres pour le moment</td>
-                    </tr>
+                <tr><td colspan="5" class="text-center text-muted">Aucun appel d'offres pour le moment.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-
 </div>
-
-<style>
-    .home-page {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .banner-home {
-        background: linear-gradient(to right, #116E9B, #026B58);
-        border-radius: 12px;
-        padding: 40px 32px;
-        color: white;
-    }
-
-    .banner-content h1 {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
-
-    .banner-content p {
-        font-size: 15px;
-        opacity: 0.9;
-        margin: 0;
-    }
-
-    .banner-content .banner-sub {
-        font-size: 13px;
-        opacity: 0.75;
-        margin-top: 4px;
-    }
-
-    .btn-banner {
-        display: inline-block;
-        margin-top: 16px;
-        background: white;
-        color: #026B58;
-        padding: 8px 24px;
-        border-radius: 5px;
-        font-weight: 600;
-        text-decoration: none;
-        font-size: 13px;
-    }
-
-    .btn-banner:hover {
-        background: #f0f2f4;
-    }
-
-    .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-    }
-
-    .metric-card {
-        background: white;
-        border-radius: 8px;
-        border: 0.5px solid #e0e2e6;
-        padding: 14px 16px;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .metric-label {
-        font-size: 12px;
-        color: #666;
-    }
-
-    .metric-value {
-        font-size: 22px;
-        font-weight: 700;
-        margin-top: 2px;
-    }
-
-    .card {
-        background: white;
-        border-radius: 8px;
-        border: 0.5px solid #e0e2e6;
-        padding: 16px 20px;
-    }
-
-    .quick-actions-home {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .btn {
-        padding: 8px 20px;
-        border-radius: 5px;
-        border: none;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .btn-primary {
-        background: var(--tg-green, #43a842);
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background: #3a9638;
-    }
-
-    .btn-outline-primary {
-        background: transparent;
-        color: var(--tg-blue, #116E9B);
-        border: 0.5px solid var(--tg-blue, #116E9B);
-    }
-
-    .btn-outline-primary:hover {
-        background: #f0f6fb;
-    }
-
-    .btn-success {
-        background: var(--tg-dark-green, #026B58);
-        color: white;
-    }
-
-    .btn-success:hover {
-        background: #025045;
-    }
-
-    .table-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 14px;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .table-header h3 {
-        font-size: 14px;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .table-ao {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
-    }
-
-    .table-ao thead th {
-        text-align: left;
-        padding: 8px 6px;
-        font-weight: 600;
-        color: #666;
-        border-bottom: 0.5px solid #e8eaed;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-
-    .table-ao tbody td {
-        padding: 10px 6px;
-        border-bottom: 0.5px solid #f0f2f4;
-        vertical-align: middle;
-    }
-
-    .table-ao tbody tr:hover {
-        background: #fafbfc;
-    }
-
-    .ref-link {
-        color: var(--tg-blue, #116E9B);
-        font-weight: 500;
-        cursor: pointer;
-    }
-
-    .ref-link:hover {
-        text-decoration: underline;
-    }
-
-    .badge {
-        padding: 2px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 500;
-    }
-
-    .badge.brouillon {
-        background: #f8f9fa;
-        color: #495057;
-    }
-
-    .badge.grille_en_attente {
-        background: #fff3cd;
-        color: #664d03;
-    }
-
-    .badge.en_cours {
-        background: #cfe2ff;
-        color: #052c65;
-    }
-
-    .badge.juge {
-        background: #d1e7dd;
-        color: #0a3622;
-    }
-
-    .badge.cloture {
-        background: #e9ecef;
-        color: #495057;
-    }
-
-    .btn-sm {
-        padding: 3px 10px;
-        border-radius: 4px;
-        border: none;
-        font-size: 11px;
-        font-weight: 500;
-        cursor: pointer;
-        text-decoration: none;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .btn-blue {
-        background: var(--tg-blue, #116E9B);
-        color: white;
-    }
-
-    .btn-blue:hover {
-        background: #0e5a7e;
-    }
-
-    .text-center {
-        text-align: center;
-    }
-
-    .text-muted {
-        color: #999;
-        font-size: 12px;
-    }
-
-    @media (max-width: 768px) {
-        .metrics-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .banner-home {
-            padding: 24px 20px;
-        }
-
-        .banner-content h1 {
-            font-size: 20px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .metrics-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .quick-actions-home {
-            flex-direction: column;
-        }
-
-        .quick-actions-home .btn {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-</style>
 {% endblock %}

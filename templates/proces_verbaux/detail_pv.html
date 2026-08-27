@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detail PV - Marches Publics{% endblock %}
+{% block current_page %}Detail PV{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+    <section class="page-hero hero-split">
+        <div>
+            <p class="eyebrow">Proces-verbal</p>
+            <h1 class="wrap-text">{{ pv.appel_offre.reference }}</h1>
+            <p class="lead wrap-text">{{ pv.appel_offre.titre }}</p>
+        </div>
+        <div class="hero-actions">
+            <span class="badge {{ pv.statut|default:'info' }}">{{ pv.get_statut_display }}</span>
+        </div>
+    </section>
+
+    <section class="grid-2">
+        <div class="card-panel">
+            <div class="section-head">
+                <div>
+                    <h2>Informations du proces-verbal</h2>
+                    <p>Resume du document et de ses metadonnees.</p>
+                </div>
+            </div>
+            <div class="detail-list">
+                <div><span>Appel d'offres</span><strong>{{ pv.appel_offre.reference }}</strong></div>
+                <div><span>Date de generation</span><strong>{{ pv.date_generation|date:"d/m/Y H:i" }}</strong></div>
+                <div><span>Statut</span><strong><span class="badge {{ pv.statut }}">{{ pv.get_statut_display }}</span></strong></div>
+                {% if pv.date_validation %}<div><span>Date de signature</span><strong>{{ pv.date_validation|date:"d/m/Y H:i" }}</strong></div>{% endif %}
+                {% if pv.valide_par %}<div><span>Signe par</span><strong>{{ pv.valide_par.get_full_name|default:pv.valide_par.username }}</strong></div>{% endif %}
+            </div>
+        </div>
+
+        <aside class="card-panel">
+            <div class="section-head">
+                <div>
+                    <h2>Actions</h2>
+                    <p>Consultation, telechargement et signature selon votre role.</p>
+                </div>
+            </div>
+            <div class="stack-actions">
+                {% if pv.fichier %}
+                    <a href="{% url 'telecharger_pv' pv.appel_offre.id %}" class="btn btn-primary full-width"><i class="ti ti-download"></i> Telecharger le DOCX</a>
+                {% endif %}
+                {% if peut_valider and pv.statut == 'brouillon' %}
+                    <form method="post" action="{% url 'valider_pv' pv.id %}" data-loading>
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary full-width"><i class="ti ti-pen"></i> Valider et signer</button>
+                    </form>
+                {% endif %}
+                <a href="{% url 'liste_pv' %}" class="btn btn-outline full-width"><i class="ti ti-arrow-left"></i> Retour</a>
+            </div>
+        </aside>
+    </section>
+
+    <section class="document-preview-panel">
+        <div class="document-actions-bar">
+            <div>
+                <p class="eyebrow">Apercu officiel</p>
+                <h2>Proces-verbal d'evaluation</h2>
+            </div>
+        </div>
+        {% with document_title="PROCES-VERBAL D'EVALUATION DES OFFRES" type_document="pv" section_1_title="I. Informations sur l'appel d'offres" section_2_title="II. Synthese des soumissionnaires" section_6_title="III. Classement final" section_7_title="IV. Attributaire" section_8_title="V. Decision finale" %}
+            {% include "proces_verbaux/includes/document_preview.html" %}
+        {% endwith %}
+    </section>
+</div>
+{% endblock %}

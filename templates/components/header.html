@@ -1,0 +1,18 @@
+{% load static %}
+<header class="app-header">
+    <div class="header-title">
+        <img src="{% static 'images/logo-togo.svg' %}" alt="République Togolaise" class="header-logo">
+        <div>
+            <strong>AO Intelligence</strong>
+            <span>GovTech Platform</span>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="icon-btn" href="#" aria-label="Notifications"><i class="ti ti-bell"></i></a>
+        <div class="header-user">
+            <span class="header-role">{{ user.get_role_display }}</span>
+            <strong>{{ user.get_full_name|default:user.username }}</strong>
+        </div>
+    </div>
+</header>
+
