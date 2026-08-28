@@ -113,6 +113,7 @@ def _extraire_pdf(chemin):
     except Exception as e:
         logger.warning("[PDF] echec_lecture_texte_natif : %s", e)
 
+    logger.info("[EXTRACTION] OCR en cours...")
     logger.info("[PDF] Pas de texte natif detecte, lancement de l'OCR...")
     return _extraire_par_ocr(chemin)
 

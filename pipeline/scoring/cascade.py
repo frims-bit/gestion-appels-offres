@@ -203,6 +203,8 @@ def reinitialiser_resultats(appel_offre):
 
 
 def etape_1_recevabilite(soumissionnaire):
+    logger.info("[SCORING] Analyse des criteres administratifs : %s", soumissionnaire.nom_entreprise)
+
     if soumissionnaire.statut_conformite in {
         Soumissionnaire.StatutConformite.RECEVABLE,
         Soumissionnaire.StatutConformite.CONFORME_TECHNIQUE,
@@ -254,10 +256,16 @@ def etape_1_recevabilite(soumissionnaire):
         soumissionnaire.motif_rejet = None
 
     soumissionnaire.save()
+    logger.info(
+        "[SCORING] Criteres administratifs : %s",
+        soumissionnaire.statut_conformite,
+    )
     return soumissionnaire
 
 
 def etape_2_conformite_technique(soumissionnaire):
+    logger.info("[SCORING] Analyse des criteres techniques : %s", soumissionnaire.nom_entreprise)
+
     if soumissionnaire.statut_conformite in {
         Soumissionnaire.StatutConformite.CONFORME_TECHNIQUE,
         Soumissionnaire.StatutConformite.NON_RECEVABLE,
@@ -323,10 +331,15 @@ def etape_2_conformite_technique(soumissionnaire):
         soumissionnaire.motif_rejet = None
 
     soumissionnaire.save()
+    logger.info(
+        "[SCORING] Criteres techniques : %s",
+        soumissionnaire.statut_conformite,
+    )
     return soumissionnaire
 
 
 def etape_3_evaluation_financiere(appel_offre):
+    logger.info("[SCORING] Evaluation financiere...")
     for soumissionnaire in appel_offre.soumissionnaires.all():
         if soumissionnaire.statut_conformite != (
             Soumissionnaire.StatutConformite.CONFORME_TECHNIQUE
@@ -341,6 +354,10 @@ def etape_3_evaluation_financiere(appel_offre):
                 "Evaluation financiere a completer : prix corrige absent."
             )
             soumissionnaire.save(update_fields=["motif_rejet"])
+        logger.info(
+            "[SCORING] Critere financier : %s",
+            "conforme" if soumissionnaire.prix_corrige is not None else "a verifier",
+        )
 
 
 def etape_4_qualification(soumissionnaire):
@@ -361,6 +378,7 @@ def etape_4_qualification(soumissionnaire):
 
 
 def etape_5_classement(appel_offre):
+    logger.info("[CLASSEMENT] Calcul du classement final...")
     appel_offre.soumissionnaires.update(rang=None)
 
     candidats = list(
@@ -382,6 +400,11 @@ def etape_5_classement(appel_offre):
             else Soumissionnaire.StatutFinal.EN_COURS
         )
         candidat.save(update_fields=["rang", "statut_final"])
+        logger.info(
+            "[CLASSEMENT] Rang %s : %s",
+            rang,
+            candidat.nom_entreprise,
+        )
 
     return candidats
 
@@ -395,18 +418,20 @@ def _tri_affichage(soumissionnaire):
 
 
 def cascade_complete(appel_offre):
-    logger.info("[cascade] Lancement : %s", appel_offre.reference)
+    logger.info("[SCORING] Debut de l'evaluation : %s", appel_offre.reference)
 
     if not appel_offre.grille_evaluee:
         raise ValueError(
             "La grille doit etre generee et validee avant de lancer la cascade."
         )
 
+    logger.info("[SCORING] Analyse des criteres...")
     reinitialiser_resultats(appel_offre)
 
     soumissionnaires = list(appel_offre.soumissionnaires.all())
 
     for soumissionnaire in soumissionnaires:
+        logger.info("[SCORING] Evaluation du dossier : %s", soumissionnaire.nom_entreprise)
         etape_1_recevabilite(soumissionnaire)
         etape_2_conformite_technique(soumissionnaire)
 
@@ -419,13 +444,14 @@ def cascade_complete(appel_offre):
 
     etape_3_evaluation_financiere(appel_offre)
 
+    logger.info("[SCORING] Calcul du score...")
     classes = etape_5_classement(appel_offre)
 
     tous = list(appel_offre.soumissionnaires.all())
     tous.sort(key=_tri_affichage)
 
     logger.info(
-        "[cascade] Termine : %s classe(s), %s non classe(s)",
+        "[SCORING] Evaluation terminee : %s classe(s), %s non classe(s)",
         len(classes),
         len(tous) - len(classes),
     )

@@ -286,6 +286,7 @@ def upload_dossier(request):
         try:
             logger.info("[UPLOAD] Dossier recu : %s", nom_entreprise)
             logger.info("[UPLOAD] Fichier : %s", fichier.name)
+            logger.info("[EXTRACTION] Debut du traitement du dossier : %s", nom_entreprise)
 
             soumissionnaire, created = Soumissionnaire.objects.get_or_create(
                 appel_offre=ao,
@@ -350,7 +351,7 @@ def upload_dossier(request):
             # EXTRACTION TEXTE
             # ==========================
 
-            logger.info("[EXTRACTION] Debut extraction : %s", chemin_complet)
+            logger.info("[EXTRACTION] Lecture des documents...")
             texte = extraire_texte(
                 chemin_complet
             )
@@ -359,8 +360,11 @@ def upload_dossier(request):
                 isinstance(texte, str)
                 and texte.startswith("[OCR]")
             ) or taille_texte < 50
-            logger.info("[EXTRACTION] Texte extrait : %s caracteres", taille_texte)
-            logger.info("[OCR] Document necessitant OCR : %s", "oui" if ocr_necessaire else "non")
+            logger.info("[EXTRACTION] Lecture terminee : %s caracteres extraits", taille_texte)
+            if ocr_necessaire:
+                logger.info("[EXTRACTION] Document traite avec OCR ou texte insuffisant")
+            else:
+                logger.info("[EXTRACTION] Texte natif detecte, OCR non necessaire")
 
             texte_exploitable = (
                 isinstance(texte, str)
@@ -376,8 +380,8 @@ def upload_dossier(request):
                 soumissionnaire.date_depot_dossier = timezone.now()
                 soumissionnaire.save()
                 logger.warning(
-                    "[EXTRACTION] Arret traitement : texte inexploitable pour soumissionnaire_id=%s",
-                    soumissionnaire.id,
+                    "[EXTRACTION] ERREUR lors du traitement du dossier : %s",
+                    nom_entreprise,
                 )
 
 
@@ -405,21 +409,20 @@ def upload_dossier(request):
             # EXTRACTION IA
             # ==========================
 
-            logger.info("[IA] Debut analyse du dossier")
+            logger.info("[EXTRACTION] Extraction des informations...")
             extraire_donnees_candidat(
                 soumissionnaire,
                 texte
             )
-            logger.info("[IA] Informations extraites")
-            logger.info("[IA] Criteres analyses : %s", soumissionnaire.donnees_extraites.count())
-            logger.info("[RECEVABILITE] Lancement cascade")
+            logger.info(
+                "[EXTRACTION] Informations extraites : %s critere(s) analyses",
+                soumissionnaire.donnees_extraites.count(),
+            )
+            logger.info("[EXTRACTION] Verification des criteres...")
             cascade_complete(ao)
             soumissionnaire.refresh_from_db()
-            logger.info("[RECEVABILITE] Resultat : %s", soumissionnaire.statut_conformite)
-            logger.info("[CONFORMITE] Resultat : %s", soumissionnaire.statut_conformite)
-            logger.info("[QUALIFICATION] Resultat : %s", soumissionnaire.qualification_conforme)
-            logger.info("[FINANCIER] Prix propose : %s", soumissionnaire.prix_lu_publiquement)
-            logger.info("[CLASSEMENT] Traitement termine : rang=%s", soumissionnaire.rang)
+            logger.info("[EXTRACTION] Extraction terminee avec succes")
+            logger.info("[CLASSEMENT] Classement mis a jour")
 
 
             messages.success(
@@ -437,7 +440,10 @@ def upload_dossier(request):
 
 
         except Exception as e:
-            logger.exception("[UPLOAD] Erreur traitement dossier : %s", nom_entreprise)
+            logger.exception(
+                "[EXTRACTION] ERREUR lors du traitement du dossier : %s",
+                nom_entreprise,
+            )
 
 
             messages.error(
@@ -559,11 +565,13 @@ def classement(request, ao_id):
 
     try:
 
+        logger.info("[CLASSEMENT] Mise a jour du classement : %s", ao.reference)
         classement_list = cascade_complete(ao)
+        logger.info("[CLASSEMENT] Classement mis a jour : %s soumissionnaire(s)", len(classement_list))
 
     except Exception as e:
 
-        logger.exception("[classement] Erreur lors de l'evaluation")
+        logger.exception("[CLASSEMENT] ERREUR lors de la mise a jour du classement")
 
         messages.error(
             request,

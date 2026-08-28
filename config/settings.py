@@ -160,3 +160,47 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {
+            "format": "%(levelname)s %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+            "level": "INFO",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "pipeline": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "soumissionnaires": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "proces_verbaux": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}

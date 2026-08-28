@@ -77,6 +77,7 @@ def generer_pv_view(request, ao_id):
             messages.success(request, "PV genere avec succes !")
             return redirect("generer_pv", ao_id=ao_id)
         except Exception as exc:
+            logger.exception("[PV] ERREUR lors de la generation du PV : %s", ao.reference)
             messages.error(request, f"Erreur lors de la generation : {exc}")
             return redirect("generer_pv", ao_id=ao_id)
 
